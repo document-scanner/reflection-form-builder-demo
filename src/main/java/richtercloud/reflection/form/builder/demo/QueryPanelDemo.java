@@ -31,8 +31,9 @@ import javax.swing.JOptionPane;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.relection.form.builder.HistoryEntry;
-import richtercloud.relection.form.builder.QueryPanel;
+import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.jpa.HistoryEntry;
+import richtercloud.reflection.form.builder.jpa.QueryPanel;
 
 /**
  *
@@ -93,7 +94,8 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         queryPanelInitialHistory.add(new HistoryEntry("select a from EntityA a", 1, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
-        this.queryPanel.init(this.entityManager, EntityA.class, queryPanelInitialHistory, QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>();
+        this.queryPanel.init(this.entityManager, reflectionFormBuilder.retrieveRelevantFields(EntityA.class), EntityA.class, queryPanelInitialHistory, QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
     }
     
     private static synchronized Long getNextId() {
@@ -113,7 +115,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         createAButton = new javax.swing.JButton();
         createBButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
-        queryPanel = new richtercloud.relection.form.builder.QueryPanel<EntityA>();
+        queryPanel = new richtercloud.reflection.form.builder.jpa.QueryPanel<EntityA>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBounds(new java.awt.Rectangle(0, 0, 0, 0));
@@ -143,24 +145,24 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 64, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 11, Short.MAX_VALUE)
                         .addComponent(createCButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(createBButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(createAButton)))
+                        .addComponent(createAButton))
+                    .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE)
+                .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 493, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(createAButton)
@@ -245,6 +247,6 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
     private javax.swing.JButton createCButton;
-    private richtercloud.relection.form.builder.QueryPanel<EntityA> queryPanel;
+    private richtercloud.reflection.form.builder.jpa.QueryPanel<EntityA> queryPanel;
     // End of variables declaration//GEN-END:variables
 }

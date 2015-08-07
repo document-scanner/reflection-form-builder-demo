@@ -28,7 +28,7 @@ import javax.swing.JPanel;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.relection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 
 /**
  *
@@ -84,7 +84,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         this.initComponents();
         try {
             this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
-            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(this.entityManager);
+            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>();
             JPanel reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
