@@ -29,6 +29,8 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.components.OCRResultPanelRetriever;
+import richtercloud.reflection.form.builder.components.ScanResultPanelRetriever;
 
 /**
  *
@@ -76,7 +78,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         }
     }
     private EntityManager entityManager;
-    
+
     /**
      * Creates new form ReflectionFormBuilderDemo
      */
@@ -84,7 +86,19 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         this.initComponents();
         try {
             this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
-            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>();
+        OCRResultPanelRetriever oCRResultPanelRetriever = new OCRResultPanelRetriever() {
+            @Override
+            public String retrieve() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+        ScanResultPanelRetriever scanResultPanelRetriever = new ScanResultPanelRetriever() {
+            @Override
+            public byte[] retrieve() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(oCRResultPanelRetriever, scanResultPanelRetriever);
             JPanel reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
@@ -141,7 +155,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -154,7 +168,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
             throw new RuntimeException(ex);
         }
         //</editor-fold>
-        
+
         //</editor-fold>
 
         /* Create and display the form */

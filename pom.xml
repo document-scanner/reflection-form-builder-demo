@@ -8,6 +8,10 @@
     </parent>
     <artifactId>reflection-form-builder-demo</artifactId>
     <packaging>jar</packaging>
+    <properties>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.hibernate</groupId>

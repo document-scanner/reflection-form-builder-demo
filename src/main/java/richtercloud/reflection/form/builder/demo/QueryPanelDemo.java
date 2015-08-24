@@ -32,6 +32,8 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.components.OCRResultPanelRetriever;
+import richtercloud.reflection.form.builder.components.ScanResultPanelRetriever;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.QueryPanel;
 
@@ -94,10 +96,22 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         queryPanelInitialHistory.add(new HistoryEntry("select a from EntityA a", 1, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
-        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>();
+        OCRResultPanelRetriever oCRResultPanelRetriever = new OCRResultPanelRetriever() {
+            @Override
+            public String retrieve() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+        ScanResultPanelRetriever scanResultPanelRetriever = new ScanResultPanelRetriever() {
+            @Override
+            public byte[] retrieve() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+        };
+        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(oCRResultPanelRetriever, scanResultPanelRetriever);
         this.queryPanel.init(this.entityManager, reflectionFormBuilder.retrieveRelevantFields(EntityA.class), EntityA.class, queryPanelInitialHistory, QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
     }
-    
+
     private static synchronized Long getNextId() {
         nextId += 1;
         return nextId;
@@ -216,7 +230,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -230,7 +244,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         }
         //</editor-fold>
         //</editor-fold>
-        
+
         //</editor-fold>
         //</editor-fold>
 
