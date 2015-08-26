@@ -15,16 +15,22 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Callable;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,19 +92,20 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         this.initComponents();
         try {
             this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
-        OCRResultPanelRetriever oCRResultPanelRetriever = new OCRResultPanelRetriever() {
-            @Override
-            public String retrieve() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-        ScanResultPanelRetriever scanResultPanelRetriever = new ScanResultPanelRetriever() {
-            @Override
-            public byte[] retrieve() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(oCRResultPanelRetriever, scanResultPanelRetriever);
+            OCRResultPanelRetriever oCRResultPanelRetriever = new OCRResultPanelRetriever() {
+                @Override
+                public String retrieve() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+            };
+            ScanResultPanelRetriever scanResultPanelRetriever = new ScanResultPanelRetriever() {
+                @Override
+                public byte[] retrieve() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+            };
+            List<Pair<Class<? extends Annotation>, Callable<? extends JComponent>>> annotationMapping = new LinkedList<>();
+            ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(annotationMapping);
             JPanel reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);

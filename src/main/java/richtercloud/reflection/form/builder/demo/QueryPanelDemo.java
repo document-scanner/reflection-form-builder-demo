@@ -15,6 +15,7 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,12 +23,15 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +112,8 @@ public class QueryPanelDemo extends javax.swing.JFrame {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
         };
-        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(oCRResultPanelRetriever, scanResultPanelRetriever);
+        List<Pair<Class<? extends Annotation>, Callable<? extends JComponent>>> annotationMapping = new LinkedList<>();
+        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(annotationMapping);
         this.queryPanel.init(this.entityManager, reflectionFormBuilder.retrieveRelevantFields(EntityA.class), EntityA.class, queryPanelInitialHistory, QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
     }
 
