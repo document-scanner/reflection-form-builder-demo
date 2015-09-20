@@ -15,8 +15,13 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 /**
  *
@@ -29,6 +34,10 @@ public class EntityA implements Serializable {
     private Long id;
     private int a;
     private String b;
+    @ElementCollection
+    private List<Integer> cs = new LinkedList<>(Arrays.asList(1));
+    @OneToMany
+    private List<EntityB> entityBs = new LinkedList<>(Arrays.asList(new EntityB()));
 
     protected EntityA() {
     }
@@ -73,5 +82,33 @@ public class EntityA implements Serializable {
      */
     public void setB(String b) {
         this.b = b;
+    }
+
+    /**
+     * @return the cs
+     */
+    public List<Integer> getCs() {
+        return cs;
+    }
+
+    /**
+     * @param cs the cs to set
+     */
+    public void setCs(List<Integer> cs) {
+        this.cs = cs;
+    }
+
+    /**
+     * @return the entityBs
+     */
+    public List<EntityB> getEntityBs() {
+        return entityBs;
+    }
+
+    /**
+     * @param entityBs the entityBs to set
+     */
+    public void setEntityBs(List<EntityB> entityBs) {
+        this.entityBs = entityBs;
     }
 }

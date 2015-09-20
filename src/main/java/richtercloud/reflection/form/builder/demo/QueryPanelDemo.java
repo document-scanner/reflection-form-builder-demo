@@ -23,21 +23,19 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.reflection.form.builder.ClassAnnotationHandler;
+import richtercloud.reflection.form.builder.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.components.OCRResultPanelRetriever;
-import richtercloud.reflection.form.builder.components.ScanResultPanelRetriever;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.QueryPanel;
 
@@ -100,20 +98,9 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         queryPanelInitialHistory.add(new HistoryEntry("select a from EntityA a", 1, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
         queryPanelInitialHistory.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
-        OCRResultPanelRetriever oCRResultPanelRetriever = new OCRResultPanelRetriever() {
-            @Override
-            public String retrieve() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-        ScanResultPanelRetriever scanResultPanelRetriever = new ScanResultPanelRetriever() {
-            @Override
-            public byte[] retrieve() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-        };
-        List<Pair<Class<? extends Annotation>, Callable<? extends JComponent>>> annotationMapping = new LinkedList<>();
-        ReflectionFormBuilder<EntityA> reflectionFormBuilder = new ReflectionFormBuilder<>(annotationMapping);
+        List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
+        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler>> classAnnotationMapping = new LinkedList<>();
+        ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
         this.queryPanel.init(this.entityManager, reflectionFormBuilder.retrieveRelevantFields(EntityA.class), EntityA.class, queryPanelInitialHistory, QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
     }
 
