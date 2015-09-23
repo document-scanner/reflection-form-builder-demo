@@ -14,8 +14,12 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,13 +28,18 @@ import java.util.Map;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import org.apache.commons.lang3.tuple.Pair;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldHandler;
-import richtercloud.reflection.form.builder.GenericListFieldHandler;
+import richtercloud.reflection.form.builder.SimpleEntityListFieldHandler;
+import richtercloud.reflection.form.builder.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.UpdateEvent;
+import richtercloud.reflection.form.builder.UpdateListener;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.retriever.ValueRetriever;
 
@@ -39,7 +48,9 @@ import richtercloud.reflection.form.builder.retriever.ValueRetriever;
  * @author richter
  */
 public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
+
     private static final long serialVersionUID = 1L;
+    private ReflectionFormPanel reflectionPanel;
 
     /**
      * Creates new form ReflectionFormBuilderDemo
@@ -47,21 +58,33 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     public ReflectionFormBuilderDemo() {
         this.initComponents();
         try {
-            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler>> classAnnotationMapping = new LinkedList<>();
-            Map<java.lang.reflect.Type, FieldHandler> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
-            classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), GenericListFieldHandler.getInstance());
-            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), GenericListFieldHandler.getInstance());
-            classMapping.put(EntityB.class, new FieldHandler() {
+            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.FIELD_ANNOTATION_MAPPING_DEFAULT);
+            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
+            Map<java.lang.reflect.Type, FieldHandler<?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
+            classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), IntegerListFieldHandler.getInstance());
+            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), SimpleEntityListFieldHandler.getInstance());
+            classMapping.put(EntityB.class, new FieldHandler<UpdateEvent<?>>() {
                 @Override
-                public JComponent handle(java.lang.reflect.Type type, ReflectionFormBuilder reflectionFormBuilder) {
-                    return new JCheckBox("This checkbox represents an EntityB!");
+                public JComponent handle(java.lang.reflect.Type type, final UpdateListener<UpdateEvent<?>> updateListener, ReflectionFormBuilder reflectionFormBuilder) {
+                    final JCheckBox retValue = new JCheckBox("This checkbox represents an EntityB!");
+                    retValue.addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mouseReleased(MouseEvent e) {
+                            updateListener.onUpdate(new UpdateEvent() {
+                                @Override
+                                public Object getNewValue() {
+                                    return retValue.isSelected();
+                                }
+                            });
+                        }
+                    });
+                    return retValue;
                 }
             });
-            Map<Class<?>, Class<? extends JComponent>> primitiveMapping = new HashMap<>();
-            Map<Class<? extends JComponent>, ValueRetriever<?,?>> valueRetrieverMapping = new HashMap<>();
+            Map<Class<?>, FieldHandler<?>> primitiveMapping = new HashMap<>(ReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
+            Map<Class<? extends JComponent>, ValueRetriever<?, ?>> valueRetrieverMapping = new HashMap<>(ReflectionFormBuilder.VALUE_RETRIEVER_MAPPING_DEFAULT);
             ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(classMapping, primitiveMapping, valueRetrieverMapping, fieldAnnotationMapping, classAnnotationMapping);
-            JPanel reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
+            reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
             this.mainPanel.add(reflectionPanel);
@@ -81,6 +104,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
+        displayButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBounds(new java.awt.Rectangle(0, 0, 0, 0));
@@ -89,26 +113,67 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         mainPanel.setLayout(mainPanelLayout);
         mainPanelLayout.setHorizontalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 622, Short.MAX_VALUE)
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGap(0, 375, Short.MAX_VALUE)
         );
+
+        displayButton.setText("Display instance info");
+        displayButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                displayButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(displayButton)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(displayButton)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
+        try {
+            Object instance = this.reflectionPanel.retrieveInstance();
+            displayInstanceInfoDialog(this, instance);
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
+    }//GEN-LAST:event_displayButtonActionPerformed
+
+    public static void displayInstanceInfoDialog(Frame owner, Object instance) {
+        JDialog displayDialog = new JDialog(owner,
+                String.format("Info - %s", ReflectionFormBuilderDemo.class.getSimpleName()), //title
+                true //modal
+        );
+        displayDialog.getContentPane().setLayout(new BorderLayout());
+        displayDialog.getContentPane().add(new JLabel(String.format("<html>%s</html>", instance.toString()) //message
+        ));
+        displayDialog.setPreferredSize(new Dimension(500, 300));
+        displayDialog.pack();
+        displayDialog.setVisible(true);
+    }
 
     /**
      * @param args the command line arguments
@@ -143,6 +208,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton displayButton;
     private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
 }

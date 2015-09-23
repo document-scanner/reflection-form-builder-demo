@@ -4,7 +4,7 @@
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
     <Property name="bounds" type="java.awt.Rectangle" editor="org.netbeans.beaninfo.editors.RectangleEditor">
-      <Rectangle value="[0, 0, 0, 0]"/>
+      <Rectangle value="[0, 0, 500, 300]"/>
     </Property>
   </Properties>
   <SyntheticProperties>
@@ -26,8 +26,9 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" attributes="0">
-              <EmptySpace pref="236" max="32767" attributes="0"/>
+          <Component id="listQueryPanel" alignment="0" pref="621" max="32767" attributes="0"/>
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace max="32767" attributes="0"/>
               <Component id="createCButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="createBButton" min="-2" max="-2" attributes="0"/>
@@ -35,13 +36,12 @@
               <Component id="createAButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
-          <Component id="queryPanel" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Group type="102" alignment="1" attributes="0">
-              <Component id="queryPanel" pref="511" max="32767" attributes="0"/>
+          <Group type="102" alignment="0" attributes="0">
+              <Component id="listQueryPanel" pref="419" max="32767" attributes="0"/>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="createAButton" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -54,20 +54,17 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
+    <Component class="richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel" name="listQueryPanel">
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new ListQueryPanel(entityManager, reflectionFormBuilder, entityClass)&#xa;"/>
+      </AuxValues>
+    </Component>
     <Component class="javax.swing.JButton" name="createAButton">
       <Properties>
         <Property name="text" type="java.lang.String" value="Create new A (references B)"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="createAButtonActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="createBButton">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Create new B"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="createBButtonActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="createCButton">
@@ -78,11 +75,13 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="createCButtonActionPerformed"/>
       </Events>
     </Component>
-    <Component class="richtercloud.reflection.form.builder.jpa.panels.QueryPanel" name="queryPanel">
-      <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new richtercloud.reflection.form.builder.jpa.panels.QueryPanel&lt;&gt;(this.entityManager, EntityA.class, reflectionFormBuilder, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT)"/>
-        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;EntityA&gt;"/>
-      </AuxValues>
+    <Component class="javax.swing.JButton" name="createBButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Create new B"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="createBButtonActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

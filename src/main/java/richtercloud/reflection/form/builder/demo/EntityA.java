@@ -22,6 +22,8 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  *
@@ -37,12 +39,15 @@ public class EntityA implements Serializable {
     @ElementCollection
     private List<Integer> cs = new LinkedList<>(Arrays.asList(1));
     @OneToMany
-    private List<EntityB> entityBs = new LinkedList<>(Arrays.asList(new EntityB()));
+    private List<EntityB> entityBs = new LinkedList<>();
+    private transient final ReflectionToStringBuilder reflectionToStringBuilder;
 
     protected EntityA() {
+        this.reflectionToStringBuilder = new ReflectionToStringBuilder(this);
     }
 
     public EntityA(Long id, int a, String b) {
+        this();
         this.id = id;
         this.a = a;
         this.b = b;
@@ -110,5 +115,14 @@ public class EntityA implements Serializable {
      */
     public void setEntityBs(List<EntityB> entityBs) {
         this.entityBs = entityBs;
+    }
+
+    public ReflectionToStringBuilder getReflectionToStringBuilder() {
+        return reflectionToStringBuilder;
+    }
+
+    @Override
+    public String toString() {
+        return new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE).toString();
     }
 }

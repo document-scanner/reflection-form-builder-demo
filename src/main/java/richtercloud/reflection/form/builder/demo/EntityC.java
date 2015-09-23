@@ -46,4 +46,9 @@ public class EntityC extends EntityA {
     public void setD(String d) {
         this.d = d;
     }
+
+    @Override
+    public String toString() {
+        return this.getReflectionToStringBuilder().toString();
+    }
 }

@@ -15,9 +15,10 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -26,39 +27,31 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author richter
  */
 @Entity
-public class EntityB implements Serializable {
+public class EntityD implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     private Long id;
-    private int a;
-    @OneToOne
-    private EntityA entityA;
+    @OneToMany
+    private List<EntityC> entityCs;
+    private String d;
     private transient final ReflectionToStringBuilder reflectionToStringBuilder;
 
-    protected EntityB() {
+    protected EntityD() {
         this.reflectionToStringBuilder = new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
-    public EntityB(Long id, int a, EntityA entityA) {
+    public EntityD(Long id, List<EntityC> entityCs, String d) {
         this();
         this.id = id;
-        this.a = a;
-        this.entityA = entityA;
-    }
-
-    public EntityA getEntityA() {
-        return this.entityA;
-    }
-
-    public void setEntityA(EntityA entityA) {
-        this.entityA = entityA;
+        this.entityCs = entityCs;
+        this.d = d;
     }
 
     /**
      * @return the id
      */
     public Long getId() {
-        return this.id;
+        return id;
     }
 
     /**
@@ -69,25 +62,36 @@ public class EntityB implements Serializable {
     }
 
     /**
-     * @return the a
+     * @return the entityCs
      */
-    public int getA() {
-        return this.a;
+    public List<EntityC> getEntityCs() {
+        return entityCs;
     }
 
     /**
-     * @param a the a to set
+     * @param entityCs the entityCs to set
      */
-    public void setA(int a) {
-        this.a = a;
+    public void setEntityCs(List<EntityC> entityCs) {
+        this.entityCs = entityCs;
     }
 
-    public ReflectionToStringBuilder getReflectionToStringBuilder() {
-        return reflectionToStringBuilder;
+    /**
+     * @return the d
+     */
+    public String getD() {
+        return d;
+    }
+
+    /**
+     * @param d the d to set
+     */
+    public void setD(String d) {
+        this.d = d;
     }
 
     @Override
     public String toString() {
         return this.reflectionToStringBuilder.toString();
     }
+
 }

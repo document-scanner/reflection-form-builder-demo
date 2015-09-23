@@ -14,91 +14,39 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
-import java.io.File;
 import java.lang.annotation.Annotation;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import javax.swing.JOptionPane;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.HistoryEntry;
+import richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel;
 
 /**
  *
  * @author richter
  */
-public class QueryPanelDemo extends javax.swing.JFrame {
+public class ListQueryPanelDemo extends javax.swing.JFrame {
     private static final long serialVersionUID = 1L;
-    public final static EntityManagerFactory ENTITY_MANAGER_FACTORY;
-    private final static Connection CONNECTION;
-    private final static String APP_NAME = "reflection-form-builder-demo";
+    private EntityManager entityManager;
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
-    static {
-        try {
-            File parentDir = new File("/tmp/reflection-form-builder-demo");
-            if(!parentDir.exists()) {
-                parentDir.mkdir();
-            }
-            String databaseDirName = "databases";
-            File databaseDir = new File(parentDir, databaseDirName);
-            Class<?> driver = EmbeddedDriver.class;
-            driver.newInstance();
-            CONNECTION = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s", databaseDir.getAbsolutePath(), !databaseDir.exists()));
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    LOGGER.info("running {} shutdown hooks", QueryPanelDemo.class);
-                    if(QueryPanelDemo.CONNECTION != null) {
-                        try {
-                            QueryPanelDemo.CONNECTION.close();
-                        } catch (SQLException ex) {
-                            LOGGER.error("an exception during shutdown of the database connection occured", ex);
-                        }
-                    }
-                }
-            });
-            ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
-        } catch (SQLException | InstantiationException | IllegalAccessException ex) {
-            JOptionPane.showMessageDialog(null, //parentComponent
-                    String.format("<html>An unexpected exception occured during the initialization of resources (%s)</html>", ex.getMessage()), //message
-                    String.format("Error in initialization of resources - %s", APP_NAME), //title
-                    JOptionPane.ERROR_MESSAGE //type
-            );
-            LOGGER.error("An unexpected exception occured during the initialization of resources (see nested exception for details)", ex);
-            throw new ExceptionInInitializerError(ex);
-        }
-    }
-    private final EntityManager entityManager;
-    private static Long nextId = 1L;
     private final static Random RANDOM = new Random();
     private ReflectionFormBuilder reflectionFormBuilder;
-    private final static List<HistoryEntry> QUERY_PANEL_INITIAL_HISTORY = new LinkedList<>();
-    static {
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select a from EntityA a", 1, new Date()));
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
-    }
+    private static Long nextId = 1L;
+    private Class<?> entityClass = EntityA.class;
 
     /**
-     * Creates new form Demo
+     * Creates new form ListQueryPanelDemo
      */
-    public QueryPanelDemo() {
-        this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
+    public ListQueryPanelDemo() {
+        this.entityManager = QueryPanelDemo.ENTITY_MANAGER_FACTORY.createEntityManager();
         List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
         List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>();
         this.reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
@@ -119,25 +67,19 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        listQueryPanel = new ListQueryPanel(entityManager, reflectionFormBuilder, entityClass)
+        ;
         createAButton = new javax.swing.JButton();
-        createBButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
-        queryPanel = new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager, EntityA.class, reflectionFormBuilder, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+        createBButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setBounds(new java.awt.Rectangle(0, 0, 0, 0));
+        setBounds(new java.awt.Rectangle(0, 0, 500, 300));
 
         createAButton.setText("Create new A (references B)");
         createAButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 createAButtonActionPerformed(evt);
-            }
-        });
-
-        createBButton.setText("Create new B");
-        createBButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createBButtonActionPerformed(evt);
             }
         });
 
@@ -148,24 +90,31 @@ public class QueryPanelDemo extends javax.swing.JFrame {
             }
         });
 
+        createBButton.setText("Create new B");
+        createBButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                createBButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(236, Short.MAX_VALUE)
+            .addComponent(listQueryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 621, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(createCButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(createBButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(createAButton)
                 .addContainerGap())
-            .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(queryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(listQueryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(createAButton)
@@ -186,6 +135,15 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }//GEN-LAST:event_createAButtonActionPerformed
 
+    private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCButtonActionPerformed
+        Long nextId0 = getNextId();
+        EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
+        this.entityManager.getTransaction().begin();
+        this.entityManager.persist(newC);
+        this.entityManager.getTransaction().commit();
+        LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
+    }//GEN-LAST:event_createCButtonActionPerformed
+
     private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBButtonActionPerformed
         Long nextId0 = getNextId();
         CriteriaQuery<EntityA> criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(EntityA.class);
@@ -203,15 +161,6 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
     }//GEN-LAST:event_createBButtonActionPerformed
 
-    private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCButtonActionPerformed
-        Long nextId0 = getNextId();
-        EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newC);
-        this.entityManager.getTransaction().commit();
-        LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
-    }//GEN-LAST:event_createCButtonActionPerformed
-
     /**
      * @param args the command line arguments
      */
@@ -228,20 +177,22 @@ public class QueryPanelDemo extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            throw new RuntimeException(ex);
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-        //</editor-fold>
-
-        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new QueryPanelDemo().setVisible(true);
+                new ListQueryPanelDemo().setVisible(true);
             }
         });
     }
@@ -250,6 +201,6 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
     private javax.swing.JButton createCButton;
-    private richtercloud.reflection.form.builder.jpa.panels.QueryPanel<EntityA> queryPanel;
+    private richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel listQueryPanel;
     // End of variables declaration//GEN-END:variables
 }
