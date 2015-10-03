@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -35,8 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldAnnotationHandler;
+import richtercloud.reflection.form.builder.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
+import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
 
 /**
  *
@@ -100,7 +103,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     public QueryPanelDemo() {
         this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
         List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
-        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>();
+        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>();
         this.reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
         this.initComponents();
     }
@@ -108,6 +111,14 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     private static synchronized Long getNextId() {
         nextId += 1;
         return nextId;
+    }
+
+    private QueryPanel createQueryPanel() {
+        try {
+            return new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager, EntityA.class, reflectionFormBuilder, null, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -122,7 +133,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         createAButton = new javax.swing.JButton();
         createBButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
-        queryPanel = new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager, EntityA.class, reflectionFormBuilder, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+        queryPanel = createQueryPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBounds(new java.awt.Rectangle(0, 0, 0, 0));

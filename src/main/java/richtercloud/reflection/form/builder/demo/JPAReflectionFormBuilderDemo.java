@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +38,13 @@ import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldHandler;
+import richtercloud.reflection.form.builder.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.jpa.EntityClassAnnotationHandler;
 import richtercloud.reflection.form.builder.jpa.IdFieldAnnoationHandler;
+import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.QueryEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.SequentialIdGenerator;
 import richtercloud.reflection.form.builder.retriever.ValueRetriever;
 
@@ -113,15 +115,26 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         try {
             this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
             List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>(JPAReflectionFormBuilder.FIELD_ANNOTATION_MAPPING_DEFAULT_JPA);
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>(JPAReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
-            Map<java.lang.reflect.Type, FieldHandler<?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
+            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>(JPAReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
+            Map<java.lang.reflect.Type, FieldHandler<?,?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
             classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), IntegerListFieldHandler.getInstance());
-            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), new QueryEntityListFieldHandler(entityManager));
-            classMapping.put(EntityD.class.getDeclaredField("entityCs").getGenericType(), new QueryEntityListFieldHandler(entityManager));
-            Map<Class<?>, FieldHandler<?>> primitiveMapping = new HashMap<>(JPAReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
+            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), new JPAEntityListFieldHandler(entityManager));
+            classMapping.put(EntityD.class.getDeclaredField("entityCs").getGenericType(), new JPAEntityListFieldHandler(entityManager));
+            Map<Class<?>, FieldHandler<?,?>> primitiveMapping = new HashMap<>(JPAReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
             Map<Class<? extends JComponent>, ValueRetriever<?,?>> valueRetrieverMapping = new HashMap<>(JPAReflectionFormBuilder.VALUE_RETRIEVER_MAPPING_DEFAULT_JPA);
-            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(classMapping, primitiveMapping, valueRetrieverMapping, entityManager, "persiting failed", new IdFieldAnnoationHandler(SequentialIdGenerator.getInstance(), "id validation failed"), new EntityClassAnnotationHandler(entityManager));
-            reflectionPanel = reflectionFormBuilder.transform(EntityD.class);
+            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(classMapping,
+                    primitiveMapping,
+                    valueRetrieverMapping,
+                    new HashSet<java.lang.reflect.Type>(),
+                    new HashSet<java.lang.reflect.Type>(),
+                    new HashSet<java.lang.reflect.Type>(),
+                    entityManager,
+                    "persiting failed",
+                    new IdFieldAnnoationHandler(SequentialIdGenerator.getInstance(), "id validation failed"),
+                    new EntityClassAnnotationHandler(entityManager));
+            reflectionPanel = reflectionFormBuilder.transform(EntityD.class,
+                    null //entityToUpdate
+            );
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
             this.mainPanel.add(reflectionPanel);

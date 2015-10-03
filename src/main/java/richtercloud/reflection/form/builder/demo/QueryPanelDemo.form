@@ -80,7 +80,7 @@
     </Component>
     <Component class="richtercloud.reflection.form.builder.jpa.panels.QueryPanel" name="queryPanel">
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new richtercloud.reflection.form.builder.jpa.panels.QueryPanel&lt;&gt;(this.entityManager, EntityA.class, reflectionFormBuilder, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT)"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="createQueryPanel();"/>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;EntityA&gt;"/>
       </AuxValues>
     </Component>

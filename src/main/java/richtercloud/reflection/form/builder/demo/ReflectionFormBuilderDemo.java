@@ -22,6 +22,7 @@ import java.awt.event.MouseEvent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,8 @@ import richtercloud.reflection.form.builder.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.UpdateEvent;
-import richtercloud.reflection.form.builder.UpdateListener;
+import richtercloud.reflection.form.builder.FieldUpdateEvent;
+import richtercloud.reflection.form.builder.FieldUpdateListener;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.retriever.ValueRetriever;
 
@@ -59,20 +60,23 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         this.initComponents();
         try {
             List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.FIELD_ANNOTATION_MAPPING_DEFAULT);
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
-            Map<java.lang.reflect.Type, FieldHandler<?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
+            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
+            Map<java.lang.reflect.Type, FieldHandler<?,?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
             classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), IntegerListFieldHandler.getInstance());
             classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), SimpleEntityListFieldHandler.getInstance());
-            classMapping.put(EntityB.class, new FieldHandler<UpdateEvent<?>>() {
+            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>>() {
                 @Override
-                public JComponent handle(java.lang.reflect.Type type, final UpdateListener<UpdateEvent<?>> updateListener, ReflectionFormBuilder reflectionFormBuilder) {
+                public JComponent handle(java.lang.reflect.Type type,
+                        Boolean fieldValue,
+                        final FieldUpdateListener<FieldUpdateEvent<Boolean>> updateListener,
+                        ReflectionFormBuilder reflectionFormBuilder) {
                     final JCheckBox retValue = new JCheckBox("This checkbox represents an EntityB!");
                     retValue.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseReleased(MouseEvent e) {
-                            updateListener.onUpdate(new UpdateEvent() {
+                            updateListener.onUpdate(new FieldUpdateEvent<Boolean>() {
                                 @Override
-                                public Object getNewValue() {
+                                public Boolean getNewValue() {
                                     return retValue.isSelected();
                                 }
                             });
@@ -81,10 +85,19 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                     return retValue;
                 }
             });
-            Map<Class<?>, FieldHandler<?>> primitiveMapping = new HashMap<>(ReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
+            Map<Class<?>, FieldHandler<?,?>> primitiveMapping = new HashMap<>(ReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
             Map<Class<? extends JComponent>, ValueRetriever<?, ?>> valueRetrieverMapping = new HashMap<>(ReflectionFormBuilder.VALUE_RETRIEVER_MAPPING_DEFAULT);
-            ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(classMapping, primitiveMapping, valueRetrieverMapping, fieldAnnotationMapping, classAnnotationMapping);
-            reflectionPanel = reflectionFormBuilder.transform(EntityA.class);
+            ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(classMapping,
+                    primitiveMapping,
+                    valueRetrieverMapping,
+                    fieldAnnotationMapping,
+                    classAnnotationMapping,
+                    new HashSet<java.lang.reflect.Type>(),
+                    new HashSet<java.lang.reflect.Type>(),
+                    new HashSet<java.lang.reflect.Type>());
+            reflectionPanel = reflectionFormBuilder.transform(EntityA.class,
+                    null //entityToUpdate
+            );
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
             this.mainPanel.add(reflectionPanel);

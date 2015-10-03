@@ -54,9 +54,9 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel" name="listQueryPanel">
+    <Component class="richtercloud.reflection.form.builder.jpa.panels.QueryListPanel" name="listQueryPanel">
       <AuxValues>
-        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new ListQueryPanel(entityManager, reflectionFormBuilder, entityClass)&#xa;"/>
+        <AuxValue name="JavaCodeGenerator_CreateCodeCustom" type="java.lang.String" value="new richtercloud.reflection.form.builder.jpa.panels.QueryListPanel(entityManager, reflectionFormBuilder, entityClass, this.initialValues)&#xa;"/>
       </AuxValues>
     </Component>
     <Component class="javax.swing.JButton" name="createAButton">

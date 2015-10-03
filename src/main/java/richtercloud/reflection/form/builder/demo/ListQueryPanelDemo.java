@@ -18,16 +18,20 @@ import java.lang.annotation.Annotation;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.swing.JOptionPane;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.FieldAnnotationHandler;
+import richtercloud.reflection.form.builder.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel;
+import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 
 /**
  *
@@ -41,6 +45,7 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     private ReflectionFormBuilder reflectionFormBuilder;
     private static Long nextId = 1L;
     private Class<?> entityClass = EntityA.class;
+    private List<Object> initialValues = new LinkedList<>();
 
     /**
      * Creates new form ListQueryPanelDemo
@@ -48,9 +53,15 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     public ListQueryPanelDemo() {
         this.entityManager = QueryPanelDemo.ENTITY_MANAGER_FACTORY.createEntityManager();
         List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
-        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<?>>> classAnnotationMapping = new LinkedList<>();
+        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>();
         this.reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
-        this.initComponents();
+        try {
+            this.initComponents();
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
+            JOptionPane.showMessageDialog(this, //parent
+                    String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),
+                    null, WIDTH);
+        }
     }
 
     private static synchronized Long getNextId() {
@@ -65,9 +76,9 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void initComponents() throws IllegalArgumentException, IllegalAccessException {
 
-        listQueryPanel = new ListQueryPanel(entityManager, reflectionFormBuilder, entityClass)
+        listQueryPanel = new QueryListPanel(entityManager, reflectionFormBuilder, entityClass, this.initialValues)
         ;
         createAButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
@@ -201,6 +212,6 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
     private javax.swing.JButton createCButton;
-    private richtercloud.reflection.form.builder.jpa.panels.ListQueryPanel listQueryPanel;
+    private richtercloud.reflection.form.builder.jpa.panels.QueryListPanel listQueryPanel;
     // End of variables declaration//GEN-END:variables
 }
