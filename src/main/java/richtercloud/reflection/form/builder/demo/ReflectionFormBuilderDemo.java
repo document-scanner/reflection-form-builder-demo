@@ -20,9 +20,8 @@ import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,26 +31,36 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldHandler;
-import richtercloud.reflection.form.builder.SimpleEntityListFieldHandler;
-import richtercloud.reflection.form.builder.IntegerListFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
+import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
+import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateListener;
+import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.FieldUpdateEvent;
-import richtercloud.reflection.form.builder.FieldUpdateListener;
-import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
-import richtercloud.reflection.form.builder.retriever.ValueRetriever;
+import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingClassAnnotationFactory;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldAnnotationFactory;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
+import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
+import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
+import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
  * @author richter
  */
 public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
-
     private static final long serialVersionUID = 1L;
+    private final static Logger LOGGER = LoggerFactory.getLogger(ReflectionFormBuilderDemo.class);
     private ReflectionFormPanel reflectionPanel;
+    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
 
     /**
      * Creates new form ReflectionFormBuilderDemo
@@ -59,45 +68,45 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     public ReflectionFormBuilderDemo() {
         this.initComponents();
         try {
-            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.FIELD_ANNOTATION_MAPPING_DEFAULT);
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>(ReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
-            Map<java.lang.reflect.Type, FieldHandler<?,?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
-            classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), IntegerListFieldHandler.getInstance());
-            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), SimpleEntityListFieldHandler.getInstance());
-            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>>() {
+            MappingFieldAnnotationFactory fieldAnnotationFactory = new MappingFieldAnnotationFactory();
+            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = fieldAnnotationFactory.generateFieldAnnotationMapping();
+            MappingClassAnnotationFactory classAnnotationFactory = new MappingClassAnnotationFactory();
+            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = classAnnotationFactory.generateClassAnnotationMapping();
+            MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
+            Map<java.lang.reflect.Type, FieldHandler<?,?,?>> classMapping = fieldHandlerFactory.generateClassMapping();
+            classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(messageHandler));
+            classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(messageHandler));
+            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder>() {
                 @Override
-                public JComponent handle(java.lang.reflect.Type type,
-                        Boolean fieldValue,
+                public JComponent handle(Field field,
+                        Object instance,
                         final FieldUpdateListener<FieldUpdateEvent<Boolean>> updateListener,
                         ReflectionFormBuilder reflectionFormBuilder) {
                     final JCheckBox retValue = new JCheckBox("This checkbox represents an EntityB!");
                     retValue.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseReleased(MouseEvent e) {
-                            updateListener.onUpdate(new FieldUpdateEvent<Boolean>() {
-                                @Override
-                                public Boolean getNewValue() {
-                                    return retValue.isSelected();
-                                }
-                            });
+                            updateListener.onUpdate(new FieldUpdateEvent<>(retValue.isSelected()));
                         }
                     });
                     return retValue;
                 }
             });
-            Map<Class<?>, FieldHandler<?,?>> primitiveMapping = new HashMap<>(ReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
-            Map<Class<? extends JComponent>, ValueRetriever<?, ?>> valueRetrieverMapping = new HashMap<>(ReflectionFormBuilder.VALUE_RETRIEVER_MAPPING_DEFAULT);
-            ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(classMapping,
-                    primitiveMapping,
-                    valueRetrieverMapping,
-                    fieldAnnotationMapping,
-                    classAnnotationMapping,
-                    new HashSet<java.lang.reflect.Type>(),
-                    new HashSet<java.lang.reflect.Type>(),
-                    new HashSet<java.lang.reflect.Type>());
-            reflectionPanel = reflectionFormBuilder.transform(EntityA.class,
-                    null //entityToUpdate
-            );
+            FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
+                    fieldHandlerFactory.generatePrimitiveMapping(),
+                    fieldAnnotationMapping, classAnnotationMapping);
+            ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
+                    "Field description",
+                    messageHandler,
+                    new JPACachedFieldRetriever());
+            try {
+                reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityA.class,
+                        null, //entityToUpdate
+                        fieldHandler
+                );
+            } catch (FieldHandlingException ex) {
+                throw new RuntimeException(ex);
+            }
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
             this.mainPanel.add(reflectionPanel);

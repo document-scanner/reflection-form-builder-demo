@@ -20,33 +20,45 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldHandler;
-import richtercloud.reflection.form.builder.FieldUpdateEvent;
-import richtercloud.reflection.form.builder.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.jpa.EntityClassAnnotationHandler;
-import richtercloud.reflection.form.builder.jpa.IdFieldAnnoationHandler;
+import richtercloud.reflection.form.builder.components.AmountMoneyCurrencyStorage;
+import richtercloud.reflection.form.builder.components.AmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.components.MemoryAmountMoneyCurrencyStorage;
+import richtercloud.reflection.form.builder.components.MemoryAmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
+import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
+import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingClassAnnotationFactory;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldAnnotationFactory;
+import richtercloud.reflection.form.builder.jpa.IdGenerator;
+import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.SequentialIdGenerator;
-import richtercloud.reflection.form.builder.retriever.ValueRetriever;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingClassAnnotationFactory;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldAnnotationFactory;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
+import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
+import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
+import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
@@ -93,7 +105,13 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
             throw new ExceptionInInitializerError(ex);
         }
     }
-    private EntityManager entityManager;
+    private final  MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final IdGenerator idGenerator = SequentialIdGenerator.getInstance();
+    private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
+    private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
+    private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
+    private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
+    private final EntityManager entityManager;
     private ReflectionFormPanel reflectionPanel;
 
     /**
@@ -112,29 +130,60 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         entityManager.persist(entityC1);
         entityManager.persist(entityC2);
         entityManager.getTransaction().commit();
+        jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(entityManager,
+                20,
+                messageHandler,
+                amountMoneyUsageStatisticsStorage,
+                amountMoneyCurrencyStorage);
+        JPAAmountMoneyMappingFieldAnnotationFactory jPAAmountMoneyFieldAnnotationMappingFactory = JPAAmountMoneyMappingFieldAnnotationFactory.create(idGenerator,
+                messageHandler,
+                new JPACachedFieldRetriever(),
+                20,
+                entityManager,
+                amountMoneyUsageStatisticsStorage,
+                amountMoneyCurrencyStorage);
+        JPAAmountMoneyMappingClassAnnotationFactory jPAAmountMoneyClassAnnotationMappingFactory = JPAAmountMoneyMappingClassAnnotationFactory.create(entityManager);
+        this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage, amountMoneyCurrencyStorage, messageHandler);
+        JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(entityManager, 20, messageHandler);
+        MappingFieldAnnotationFactory fieldAnnotationFactory = new MappingFieldAnnotationFactory();
+        MappingClassAnnotationFactory classAnnotationFactory = new MappingClassAnnotationFactory();
+        FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
+                this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping(),
+                fieldAnnotationFactory.generateFieldAnnotationMapping(),
+                classAnnotationFactory.generateClassAnnotationMapping());
+        ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                messageHandler,
+                embeddableFieldHandler);
         try {
-            this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
-            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>(JPAReflectionFormBuilder.FIELD_ANNOTATION_MAPPING_DEFAULT_JPA);
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>(JPAReflectionFormBuilder.CLASS_ANNOTATION_MAPPING_DEFAULT);
-            Map<java.lang.reflect.Type, FieldHandler<?,?>> classMapping = new HashMap<>(JPAReflectionFormBuilder.CLASS_MAPPING_DEFAULT);
-            classMapping.put(EntityA.class.getDeclaredField("cs").getGenericType(), IntegerListFieldHandler.getInstance());
-            classMapping.put(EntityA.class.getDeclaredField("entityBs").getGenericType(), new JPAEntityListFieldHandler(entityManager));
-            classMapping.put(EntityD.class.getDeclaredField("entityCs").getGenericType(), new JPAEntityListFieldHandler(entityManager));
-            Map<Class<?>, FieldHandler<?,?>> primitiveMapping = new HashMap<>(JPAReflectionFormBuilder.PRIMITIVE_MAPPING_DEFAULT);
-            Map<Class<? extends JComponent>, ValueRetriever<?,?>> valueRetrieverMapping = new HashMap<>(JPAReflectionFormBuilder.VALUE_RETRIEVER_MAPPING_DEFAULT_JPA);
-            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(classMapping,
+            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = jPAAmountMoneyFieldAnnotationMappingFactory.generateFieldAnnotationMapping();
+            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = jPAAmountMoneyClassAnnotationMappingFactory.generateClassAnnotationMapping();
+            Map<java.lang.reflect.Type, FieldHandler<?,?,?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
+            classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
+                    new IntegerListFieldHandler(messageHandler));
+            classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
+                    new JPAEntityListFieldHandler(entityManager, messageHandler));
+            classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
+                    new JPAEntityListFieldHandler(entityManager, messageHandler));
+            Map<Class<?>, FieldHandler<?,?,?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
+            FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
+                    amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
                     primitiveMapping,
-                    valueRetrieverMapping,
-                    new HashSet<java.lang.reflect.Type>(),
-                    new HashSet<java.lang.reflect.Type>(),
-                    new HashSet<java.lang.reflect.Type>(),
-                    entityManager,
-                    "persiting failed",
-                    new IdFieldAnnoationHandler(SequentialIdGenerator.getInstance(), "id validation failed"),
-                    new EntityClassAnnotationHandler(entityManager));
-            reflectionPanel = reflectionFormBuilder.transform(EntityD.class,
-                    null //entityToUpdate
-            );
+                    fieldAnnotationMapping,
+                    classAnnotationMapping,
+                    elementCollectionTypeHandler);
+            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(entityManager,
+                    APP_NAME,
+                    messageHandler,
+                    new JPACachedFieldRetriever());
+            try {
+                reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
+                        null, //entityToUpdate
+                        fieldHandler
+                );
+            } catch (FieldHandlingException ex) {
+                throw new RuntimeException(ex);
+            }
             BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
             this.mainPanel.setLayout(mainPanelLayout);
             this.mainPanel.add(reflectionPanel);
@@ -228,15 +277,11 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            throw new RuntimeException(ex);
         }
+        //</editor-fold>
+
         //</editor-fold>
 
         /* Create and display the form */

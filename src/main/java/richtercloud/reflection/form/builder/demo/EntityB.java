@@ -30,28 +30,28 @@ public class EntityB implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     private Long id;
-    private int a;
+    private int intBasicB;
     @OneToOne
-    private EntityA entityA;
+    private EntityA oneToOneEntityA;
     private transient final ReflectionToStringBuilder reflectionToStringBuilder;
 
     protected EntityB() {
         this.reflectionToStringBuilder = new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
-    public EntityB(Long id, int a, EntityA entityA) {
+    public EntityB(Long id, int intBasicB, EntityA oneToOneEntityA) {
         this();
         this.id = id;
-        this.a = a;
-        this.entityA = entityA;
+        this.intBasicB = intBasicB;
+        this.oneToOneEntityA = oneToOneEntityA;
     }
 
-    public EntityA getEntityA() {
-        return this.entityA;
+    public EntityA getOneToOneEntityA() {
+        return this.oneToOneEntityA;
     }
 
-    public void setEntityA(EntityA entityA) {
-        this.entityA = entityA;
+    public void setOneToOneEntityA(EntityA oneToOneEntityA) {
+        this.oneToOneEntityA = oneToOneEntityA;
     }
 
     /**
@@ -69,17 +69,17 @@ public class EntityB implements Serializable {
     }
 
     /**
-     * @return the a
+     * @return the intBasicB
      */
-    public int getA() {
-        return this.a;
+    public int getIntBasicB() {
+        return this.intBasicB;
     }
 
     /**
-     * @param a the a to set
+     * @param intBasicB the intBasicB to set
      */
-    public void setA(int a) {
-        this.a = a;
+    public void setIntBasicB(int intBasicB) {
+        this.intBasicB = intBasicB;
     }
 
     public ReflectionToStringBuilder getReflectionToStringBuilder() {

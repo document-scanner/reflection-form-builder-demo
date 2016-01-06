@@ -18,7 +18,6 @@ import java.lang.annotation.Annotation;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -27,11 +26,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldUpdateEvent;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
+import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
+import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
+import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
+import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
@@ -46,6 +51,7 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     private static Long nextId = 1L;
     private Class<?> entityClass = EntityA.class;
     private List<Object> initialValues = new LinkedList<>();
+    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
 
     /**
      * Creates new form ListQueryPanelDemo
@@ -54,7 +60,14 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
         this.entityManager = QueryPanelDemo.ENTITY_MANAGER_FACTORY.createEntityManager();
         List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
         List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>();
-        this.reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
+        MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
+        FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
+                mappingFieldHandlerFactory.generatePrimitiveMapping(),
+                fieldAnnotationMapping,
+                classAnnotationMapping);
+        this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
+                messageHandler,
+                new JPACachedFieldRetriever());
         try {
             this.initComponents();
         } catch (IllegalArgumentException | IllegalAccessException ex) {

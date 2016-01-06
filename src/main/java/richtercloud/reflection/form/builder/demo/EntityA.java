@@ -34,23 +34,23 @@ public class EntityA implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     private Long id;
-    private int a;
-    private String b;
+    private int intBasic;
+    private String stringBasic;
     @ElementCollection
-    private List<Integer> cs = new LinkedList<>(Arrays.asList(1));
+    private List<Integer> elementCollectionBasics = new LinkedList<>(Arrays.asList(1));
     @OneToMany
-    private List<EntityB> entityBs = new LinkedList<>();
+    private List<EntityB> oneToManyEntityBs = new LinkedList<>();
     private transient final ReflectionToStringBuilder reflectionToStringBuilder;
 
     protected EntityA() {
         this.reflectionToStringBuilder = new ReflectionToStringBuilder(this);
     }
 
-    public EntityA(Long id, int a, String b) {
+    public EntityA(Long id, int intBasic, String stringBasic) {
         this();
         this.id = id;
-        this.a = a;
-        this.b = b;
+        this.intBasic = intBasic;
+        this.stringBasic = stringBasic;
     }
 
     public Long getId() {
@@ -62,59 +62,59 @@ public class EntityA implements Serializable {
     }
 
     /**
-     * @return the a
+     * @return the intBasic
      */
-    public int getA() {
-        return this.a;
+    public int getIntBasic() {
+        return this.intBasic;
     }
 
     /**
-     * @param a the a to set
+     * @param a the intBasic to set
      */
-    public void setA(int a) {
-        this.a = a;
+    public void setIntBasic(int a) {
+        this.intBasic = a;
     }
 
     /**
-     * @return the b
+     * @return the stringBasic
      */
-    public String getB() {
-        return this.b;
+    public String getStringBasic() {
+        return this.stringBasic;
     }
 
     /**
-     * @param b the b to set
+     * @param b the stringBasic to set
      */
-    public void setB(String b) {
-        this.b = b;
+    public void setStringBasic(String b) {
+        this.stringBasic = b;
     }
 
     /**
-     * @return the cs
+     * @return the elementCollectionBasics
      */
-    public List<Integer> getCs() {
-        return cs;
+    public List<Integer> getElementCollectionBasics() {
+        return elementCollectionBasics;
     }
 
     /**
-     * @param cs the cs to set
+     * @param cs the elementCollectionBasics to set
      */
-    public void setCs(List<Integer> cs) {
-        this.cs = cs;
+    public void setElementCollectionBasics(List<Integer> cs) {
+        this.elementCollectionBasics = cs;
     }
 
     /**
-     * @return the entityBs
+     * @return the oneToManyEntityBs
      */
-    public List<EntityB> getEntityBs() {
-        return entityBs;
+    public List<EntityB> getOneToManyEntityBs() {
+        return oneToManyEntityBs;
     }
 
     /**
-     * @param entityBs the entityBs to set
+     * @param entityBs the oneToManyEntityBs to set
      */
-    public void setEntityBs(List<EntityB> entityBs) {
-        this.entityBs = entityBs;
+    public void setOneToManyEntityBs(List<EntityB> entityBs) {
+        this.oneToManyEntityBs = entityBs;
     }
 
     public ReflectionToStringBuilder getReflectionToStringBuilder() {

@@ -15,7 +15,9 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -32,19 +34,21 @@ public class EntityD implements Serializable {
     @Id
     private Long id;
     @OneToMany
-    private List<EntityC> entityCs;
-    private String d;
+    private List<EntityC> oneToManyEntityCs;
+    private String stringBasic;
+    @ElementCollection
+    private List<EmbeddableA> elementCollectionEmbeddables = new LinkedList<>();
     private transient final ReflectionToStringBuilder reflectionToStringBuilder;
 
     protected EntityD() {
         this.reflectionToStringBuilder = new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE);
     }
 
-    public EntityD(Long id, List<EntityC> entityCs, String d) {
+    public EntityD(Long id, List<EntityC> oneToManyEntityCs, String stringBasic) {
         this();
         this.id = id;
-        this.entityCs = entityCs;
-        this.d = d;
+        this.oneToManyEntityCs = oneToManyEntityCs;
+        this.stringBasic = stringBasic;
     }
 
     /**
@@ -62,31 +66,39 @@ public class EntityD implements Serializable {
     }
 
     /**
-     * @return the entityCs
+     * @return the oneToManyEntityCs
      */
-    public List<EntityC> getEntityCs() {
-        return entityCs;
+    public List<EntityC> getOneToManyEntityCs() {
+        return oneToManyEntityCs;
     }
 
     /**
-     * @param entityCs the entityCs to set
+     * @param oneToManyEntityCs the oneToManyEntityCs to set
      */
-    public void setEntityCs(List<EntityC> entityCs) {
-        this.entityCs = entityCs;
+    public void setOneToManyEntityCs(List<EntityC> oneToManyEntityCs) {
+        this.oneToManyEntityCs = oneToManyEntityCs;
     }
 
     /**
-     * @return the d
+     * @return the stringBasic
      */
-    public String getD() {
-        return d;
+    public String getStringBasicD() {
+        return stringBasic;
     }
 
     /**
-     * @param d the d to set
+     * @param d the stringBasic to set
      */
-    public void setD(String d) {
-        this.d = d;
+    public void setStringBasicD(String d) {
+        this.stringBasic = d;
+    }
+
+    public List<EmbeddableA> getElementCollectionEmbeddables() {
+        return elementCollectionEmbeddables;
+    }
+
+    public void setElementCollectionEmbeddables(List<EmbeddableA> elementCollectionEmbeddables) {
+        this.elementCollectionEmbeddables = elementCollectionEmbeddables;
     }
 
     @Override

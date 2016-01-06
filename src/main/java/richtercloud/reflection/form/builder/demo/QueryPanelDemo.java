@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -35,11 +34,16 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldAnnotationHandler;
-import richtercloud.reflection.form.builder.FieldUpdateEvent;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
+import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
+import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
+import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
@@ -96,15 +100,16 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
         QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
     }
+    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
 
     /**
      * Creates new form Demo
      */
     public QueryPanelDemo() {
         this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
-        List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
-        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>();
-        this.reflectionFormBuilder = new ReflectionFormBuilder(fieldAnnotationMapping, classAnnotationMapping);
+        this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
+                messageHandler,
+                new JPACachedFieldRetriever());
         this.initComponents();
     }
 
@@ -115,7 +120,13 @@ public class QueryPanelDemo extends javax.swing.JFrame {
 
     private QueryPanel createQueryPanel() {
         try {
-            return new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager, EntityA.class, reflectionFormBuilder, null, QUERY_PANEL_INITIAL_HISTORY, richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+            return new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager,
+                    EntityA.class,
+                    reflectionFormBuilder,
+                    null, //initialValue
+                    QUERY_PANEL_INITIAL_HISTORY, //initialHistory
+                    null, //initialSelectedHistoryEntry
+                    richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
