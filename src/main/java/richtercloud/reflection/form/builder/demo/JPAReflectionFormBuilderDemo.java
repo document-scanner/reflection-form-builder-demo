@@ -15,48 +15,40 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.reflection.form.builder.ClassAnnotationHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.components.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.AmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.components.MemoryAmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.MemoryAmountMoneyUsageStatisticsStorage;
-import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
-import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingClassAnnotationFactory;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldAnnotationFactory;
 import richtercloud.reflection.form.builder.jpa.IdGenerator;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.SequentialIdGenerator;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingClassAnnotationFactory;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldAnnotationFactory;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
+import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
+import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
+import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
 import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
 import richtercloud.reflection.form.builder.message.MessageHandler;
 
@@ -130,52 +122,53 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         entityManager.persist(entityC1);
         entityManager.persist(entityC2);
         entityManager.getTransaction().commit();
+        String bidirectionalHelpDialogTitle = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
         jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(entityManager,
                 20,
                 messageHandler,
                 amountMoneyUsageStatisticsStorage,
-                amountMoneyCurrencyStorage);
-        JPAAmountMoneyMappingFieldAnnotationFactory jPAAmountMoneyFieldAnnotationMappingFactory = JPAAmountMoneyMappingFieldAnnotationFactory.create(idGenerator,
-                messageHandler,
-                new JPACachedFieldRetriever(),
-                20,
-                entityManager,
-                amountMoneyUsageStatisticsStorage,
-                amountMoneyCurrencyStorage);
-        JPAAmountMoneyMappingClassAnnotationFactory jPAAmountMoneyClassAnnotationMappingFactory = JPAAmountMoneyMappingClassAnnotationFactory.create(entityManager);
+                amountMoneyCurrencyStorage,
+                bidirectionalHelpDialogTitle);
         this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage, amountMoneyCurrencyStorage, messageHandler);
-        JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(entityManager, 20, messageHandler);
-        MappingFieldAnnotationFactory fieldAnnotationFactory = new MappingFieldAnnotationFactory();
-        MappingClassAnnotationFactory classAnnotationFactory = new MappingClassAnnotationFactory();
+        JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(entityManager,
+                20,
+                messageHandler,
+                bidirectionalHelpDialogTitle);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
-                this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping(),
-                fieldAnnotationFactory.generateFieldAnnotationMapping(),
-                classAnnotationFactory.generateClassAnnotationMapping());
+                this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
         ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 messageHandler,
                 embeddableFieldHandler);
         try {
-            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = jPAAmountMoneyFieldAnnotationMappingFactory.generateFieldAnnotationMapping();
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = jPAAmountMoneyClassAnnotationMappingFactory.generateClassAnnotationMapping();
-            Map<java.lang.reflect.Type, FieldHandler<?,?,?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
+            Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
                     new IntegerListFieldHandler(messageHandler));
             classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
-                    new JPAEntityListFieldHandler(entityManager, messageHandler));
+                    new JPAEntityListFieldHandler(entityManager, messageHandler, bidirectionalHelpDialogTitle));
             classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
-                    new JPAEntityListFieldHandler(entityManager, messageHandler));
-            Map<Class<?>, FieldHandler<?,?,?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
+                    new JPAEntityListFieldHandler(entityManager, messageHandler, bidirectionalHelpDialogTitle));
+            Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
+            ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(entityManager,
+                    jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                    jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                    bidirectionalHelpDialogTitle);
+            ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(entityManager,
+                    bidirectionalHelpDialogTitle);
+            JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
                     amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
                     primitiveMapping,
-                    fieldAnnotationMapping,
-                    classAnnotationMapping,
-                    elementCollectionTypeHandler);
+                    elementCollectionTypeHandler,
+                    toManyTypeHandler,
+                    toOneTypeHandler,
+                    idGenerator,
+                    messageHandler,
+                    fieldRetriever);
             JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(entityManager,
                     APP_NAME,
                     messageHandler,
-                    new JPACachedFieldRetriever());
+                    fieldRetriever);
             try {
                 reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
                         null, //entityToUpdate

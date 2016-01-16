@@ -15,40 +15,32 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.reflection.form.builder.ClassAnnotationHandler;
+import richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
 import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateListener;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
-import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingClassAnnotationFactory;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldAnnotationFactory;
+import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
 import richtercloud.reflection.form.builder.message.MessageHandler;
 
@@ -68,15 +60,11 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     public ReflectionFormBuilderDemo() {
         this.initComponents();
         try {
-            MappingFieldAnnotationFactory fieldAnnotationFactory = new MappingFieldAnnotationFactory();
-            List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = fieldAnnotationFactory.generateFieldAnnotationMapping();
-            MappingClassAnnotationFactory classAnnotationFactory = new MappingClassAnnotationFactory();
-            List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = classAnnotationFactory.generateClassAnnotationMapping();
             MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
-            Map<java.lang.reflect.Type, FieldHandler<?,?,?>> classMapping = fieldHandlerFactory.generateClassMapping();
+            Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(messageHandler));
             classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(messageHandler));
-            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder>() {
+            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder, Component>() {
                 @Override
                 public JComponent handle(Field field,
                         Object instance,
@@ -91,10 +79,14 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                     });
                     return retValue;
                 }
+
+                @Override
+                public void reset(Component component) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
             });
             FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
-                    fieldHandlerFactory.generatePrimitiveMapping(),
-                    fieldAnnotationMapping, classAnnotationMapping);
+                    fieldHandlerFactory.generatePrimitiveMapping());
             ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
                     "Field description",
                     messageHandler,

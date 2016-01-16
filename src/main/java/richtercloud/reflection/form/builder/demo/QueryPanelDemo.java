@@ -15,7 +15,7 @@
 package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -23,24 +23,20 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.swing.JOptionPane;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
 import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
 import richtercloud.reflection.form.builder.message.MessageHandler;
@@ -101,6 +97,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
     }
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final Class<?> entityClass = EntityA.class;
 
     /**
      * Creates new form Demo
@@ -119,14 +116,25 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     }
 
     private QueryPanel createQueryPanel() {
+        String bidirectionalHelpDialogTitle = String.format("%s - Info", QueryPanelDemo.class.getSimpleName());
+
+        List<Field> entityClassFields = reflectionFormBuilder.getFieldRetriever().retrieveRelevantFields(entityClass);
+        Set<Field> mappedFieldCandidates = QueryPanel.retrieveMappedFieldCandidates(entityClass,
+                        entityClassFields,
+                        reflectionFormBuilder.getFieldRetriever());
+        BidirectionalControlPanel bidirectionalControlPanel = new BidirectionalControlPanel(entityClass,
+                bidirectionalHelpDialogTitle,
+                QueryPanel.retrieveMappedByField(entityClassFields),
+                mappedFieldCandidates);
         try {
-            return new richtercloud.reflection.form.builder.jpa.panels.QueryPanel<>(this.entityManager,
-                    EntityA.class,
+            return new QueryPanel<>(this.entityManager,
+                    entityClass,
                     reflectionFormBuilder,
                     null, //initialValue
                     QUERY_PANEL_INITIAL_HISTORY, //initialHistory
                     null, //initialSelectedHistoryEntry
-                    richtercloud.reflection.form.builder.jpa.panels.QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT);
+                    QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT,
+                    bidirectionalControlPanel);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }

@@ -14,7 +14,6 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
-import java.lang.annotation.Annotation;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -22,16 +21,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.swing.JOptionPane;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.reflection.form.builder.ClassAnnotationHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldAnnotationHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
@@ -42,7 +37,7 @@ import richtercloud.reflection.form.builder.message.MessageHandler;
  *
  * @author richter
  */
-public class ListQueryPanelDemo extends javax.swing.JFrame {
+public class QueryListPanelDemo extends javax.swing.JFrame {
     private static final long serialVersionUID = 1L;
     private EntityManager entityManager;
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
@@ -52,28 +47,32 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     private Class<?> entityClass = EntityA.class;
     private List<Object> initialValues = new LinkedList<>();
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final static String BIDIRECTIONAL_HELP_DIALOG_TITLE = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
+    private final QueryListPanel queryListPanel;
 
     /**
      * Creates new form ListQueryPanelDemo
      */
-    public ListQueryPanelDemo() {
+    public QueryListPanelDemo() {
         this.entityManager = QueryPanelDemo.ENTITY_MANAGER_FACTORY.createEntityManager();
-        List<Pair<Class<? extends Annotation>, FieldAnnotationHandler>> fieldAnnotationMapping = new LinkedList<>();
-        List<Pair<Class<? extends Annotation>, ClassAnnotationHandler<Object,FieldUpdateEvent<Object>>>> classAnnotationMapping = new LinkedList<>();
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
-                mappingFieldHandlerFactory.generatePrimitiveMapping(),
-                fieldAnnotationMapping,
-                classAnnotationMapping);
+                mappingFieldHandlerFactory.generatePrimitiveMapping());
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
                 new JPACachedFieldRetriever());
+        this.initComponents();
         try {
-            this.initComponents();
+            this.queryListPanel = new QueryListPanel(entityManager,
+                reflectionFormBuilder,
+                entityClass,
+                this.initialValues,
+                BIDIRECTIONAL_HELP_DIALOG_TITLE);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(this, //parent
                     String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),
                     null, WIDTH);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -89,10 +88,8 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() throws IllegalArgumentException, IllegalAccessException {
+    private void initComponents() {
 
-        listQueryPanel = new QueryListPanel(entityManager, reflectionFormBuilder, entityClass, this.initialValues)
-        ;
         createAButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
         createBButton = new javax.swing.JButton();
@@ -106,6 +103,7 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
                 createAButtonActionPerformed(evt);
             }
         });
+        getContentPane().add(createAButton);
 
         createCButton.setText("Create new C (extends A)");
         createCButton.addActionListener(new java.awt.event.ActionListener() {
@@ -113,6 +111,7 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
                 createCButtonActionPerformed(evt);
             }
         });
+        getContentPane().add(createCButton);
 
         createBButton.setText("Create new B");
         createBButton.addActionListener(new java.awt.event.ActionListener() {
@@ -120,32 +119,7 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
                 createBButtonActionPerformed(evt);
             }
         });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(listQueryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 621, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(createCButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(createBButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(createAButton)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(listQueryPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(createAButton)
-                    .addComponent(createBButton)
-                    .addComponent(createCButton))
-                .addContainerGap())
-        );
+        getContentPane().add(createBButton);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -202,21 +176,22 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ListQueryPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new ListQueryPanelDemo().setVisible(true);
+                new QueryListPanelDemo().setVisible(true);
             }
         });
     }
@@ -225,6 +200,5 @@ public class ListQueryPanelDemo extends javax.swing.JFrame {
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
     private javax.swing.JButton createCButton;
-    private richtercloud.reflection.form.builder.jpa.panels.QueryListPanel listQueryPanel;
     // End of variables declaration//GEN-END:variables
 }
