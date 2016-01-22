@@ -131,9 +131,6 @@ public class QueryPanelDemo extends javax.swing.JFrame {
                     entityClass,
                     reflectionFormBuilder,
                     null, //initialValue
-                    QUERY_PANEL_INITIAL_HISTORY, //initialHistory
-                    null, //initialSelectedHistoryEntry
-                    QueryPanel.INITIAL_QUERY_LIMIT_DEFAULT,
                     bidirectionalControlPanel);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
