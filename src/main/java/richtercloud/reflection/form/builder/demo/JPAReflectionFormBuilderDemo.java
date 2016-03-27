@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.components.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.AmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.components.FixerAmountMoneyExchangeRateRetriever;
 import richtercloud.reflection.form.builder.components.MemoryAmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.MemoryAmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
@@ -51,6 +52,7 @@ import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
 import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
 import richtercloud.reflection.form.builder.message.MessageHandler;
+import richtercloud.reflection.form.builder.components.AmountMoneyExchangeRateRetriever;
 
 /**
  *
@@ -101,6 +103,7 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
     private final IdGenerator idGenerator = SequentialIdGenerator.getInstance();
     private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
     private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
+    private final AmountMoneyExchangeRateRetriever amountMoneyConversionRateRetriever = new FixerAmountMoneyExchangeRateRetriever();
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
     private final EntityManager entityManager;
@@ -128,8 +131,12 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
                 messageHandler,
                 amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
+                amountMoneyConversionRateRetriever,
                 bidirectionalHelpDialogTitle);
-        this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage, amountMoneyCurrencyStorage, messageHandler);
+        this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
+                amountMoneyCurrencyStorage,
+                amountMoneyConversionRateRetriever,
+                messageHandler);
         JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(entityManager,
                 20,
                 messageHandler,
