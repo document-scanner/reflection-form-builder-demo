@@ -157,10 +157,12 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
                     new JPAEntityListFieldHandler(entityManager, messageHandler, bidirectionalHelpDialogTitle));
             Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
             ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(entityManager,
+                    messageHandler,
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     bidirectionalHelpDialogTitle);
             ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(entityManager,
+                    messageHandler,
                     bidirectionalHelpDialogTitle);
             JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),

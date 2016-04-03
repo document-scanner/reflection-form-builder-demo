@@ -106,6 +106,7 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
             this.queryListPanel = new QueryListPanel(entityManager,
                 reflectionFormBuilder,
                 entityClass,
+                messageHandler,
                 this.initialValues,
                 BIDIRECTIONAL_HELP_DIALOG_TITLE);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
@@ -169,7 +170,7 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         pack();
     }
 
-    private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAButtonActionPerformed
+    private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
         this.entityManager.getTransaction().begin();

@@ -129,6 +129,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         try {
             return new QueryPanel<>(this.entityManager,
                     entityClass,
+                    messageHandler,
                     reflectionFormBuilder,
                     null, //initialValue
                     bidirectionalControlPanel);
