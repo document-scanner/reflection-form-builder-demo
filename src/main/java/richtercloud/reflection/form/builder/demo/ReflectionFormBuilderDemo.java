@@ -30,6 +30,8 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.LoggerMessageHandler;
+import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
@@ -41,8 +43,6 @@ import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
-import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
-import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
@@ -168,12 +168,8 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
-        try {
-            Object instance = this.reflectionPanel.retrieveInstance();
-            displayInstanceInfoDialog(this, instance);
-        } catch (IllegalArgumentException | IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        }
+        Object instance = this.reflectionPanel.retrieveInstance();
+        displayInstanceInfoDialog(this, instance);
     }//GEN-LAST:event_displayButtonActionPerformed
 
     public static void displayInstanceInfoDialog(Frame owner, Object instance) {

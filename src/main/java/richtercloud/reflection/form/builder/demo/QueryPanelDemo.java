@@ -30,16 +30,17 @@ import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.LoggerMessageHandler;
+import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
-import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
-import richtercloud.reflection.form.builder.message.MessageHandler;
 
 /**
  *
@@ -120,11 +121,10 @@ public class QueryPanelDemo extends javax.swing.JFrame {
 
         List<Field> entityClassFields = reflectionFormBuilder.getFieldRetriever().retrieveRelevantFields(entityClass);
         Set<Field> mappedFieldCandidates = QueryPanel.retrieveMappedFieldCandidates(entityClass,
-                        entityClassFields,
-                        reflectionFormBuilder.getFieldRetriever());
+                        entityClassFields);
         BidirectionalControlPanel bidirectionalControlPanel = new BidirectionalControlPanel(entityClass,
                 bidirectionalHelpDialogTitle,
-                QueryPanel.retrieveMappedByField(entityClassFields),
+                QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
         try {
             return new QueryPanel<>(this.entityManager,
@@ -132,7 +132,8 @@ public class QueryPanelDemo extends javax.swing.JFrame {
                     messageHandler,
                     reflectionFormBuilder,
                     null, //initialValue
-                    bidirectionalControlPanel);
+                    bidirectionalControlPanel,
+                    ListSelectionModel.SINGLE_SELECTION);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }

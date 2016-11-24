@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -28,12 +29,15 @@ import javax.swing.JOptionPane;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.ConfirmMessageHandler;
+import richtercloud.message.handler.DialogConfirmMessageHandler;
+import richtercloud.message.handler.LoggerMessageHandler;
+import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.components.AmountMoneyCurrencyStorage;
-import richtercloud.reflection.form.builder.components.AmountMoneyUsageStatisticsStorage;
-import richtercloud.reflection.form.builder.components.FixerAmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.components.MemoryAmountMoneyCurrencyStorage;
-import richtercloud.reflection.form.builder.components.MemoryAmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
+import richtercloud.reflection.form.builder.components.money.AmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
+import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
@@ -44,15 +48,17 @@ import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.SequentialIdGenerator;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
-import richtercloud.reflection.form.builder.message.LoggerMessageHandler;
-import richtercloud.reflection.form.builder.message.MessageHandler;
-import richtercloud.reflection.form.builder.components.AmountMoneyExchangeRateRetriever;
+import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
+import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
+import richtercloud.reflection.form.builder.jpa.WarningHandler;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
+import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
+import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
 
 /**
  *
@@ -99,11 +105,13 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
             throw new ExceptionInInitializerError(ex);
         }
     }
-    private final  MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final ConfirmMessageHandler confirmMessageHandler = new DialogConfirmMessageHandler(this);
     private final IdGenerator idGenerator = SequentialIdGenerator.getInstance();
+    private final IdApplier idApplier = new GeneratedValueIdApplier();
     private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
     private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
-    private final AmountMoneyExchangeRateRetriever amountMoneyConversionRateRetriever = new FixerAmountMoneyExchangeRateRetriever();
+    private final AmountMoneyExchangeRateRetriever amountMoneyConversionRateRetriever = new FailsafeAmountMoneyExchangeRateRetriever();
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
     private final EntityManager entityManager;
@@ -171,13 +179,17 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
                     elementCollectionTypeHandler,
                     toManyTypeHandler,
                     toOneTypeHandler,
-                    idGenerator,
                     messageHandler,
-                    fieldRetriever);
+                    fieldRetriever,
+                    idApplier);
             JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(entityManager,
                     APP_NAME,
                     messageHandler,
-                    fieldRetriever);
+                    confirmMessageHandler,
+                    fieldRetriever,
+                    idApplier,
+                    new HashMap<Class<?>, WarningHandler<?>>() //warningHandlers
+            );
             try {
                 reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
                         null, //entityToUpdate
@@ -255,12 +267,8 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
-        try {
-            Object instance = this.reflectionPanel.retrieveInstance();
-            ReflectionFormBuilderDemo.displayInstanceInfoDialog(this, instance);
-        } catch (IllegalArgumentException | IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        }
+        Object instance = this.reflectionPanel.retrieveInstance();
+        ReflectionFormBuilderDemo.displayInstanceInfoDialog(this, instance);
     }//GEN-LAST:event_displayButtonActionPerformed
 
     /**
