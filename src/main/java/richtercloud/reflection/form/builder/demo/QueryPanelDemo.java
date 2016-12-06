@@ -14,24 +14,15 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
-import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
-import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.message.handler.LoggerMessageHandler;
@@ -41,53 +32,16 @@ import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
+import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
  *
  * @author richter
  */
-public class QueryPanelDemo extends javax.swing.JFrame {
+public class QueryPanelDemo extends AbstractDemo {
     private static final long serialVersionUID = 1L;
-    public final static EntityManagerFactory ENTITY_MANAGER_FACTORY;
-    private final static Connection CONNECTION;
     private final static String APP_NAME = "reflection-form-builder-demo";
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
-    static {
-        try {
-            File parentDir = new File("/tmp/reflection-form-builder-demo");
-            if(!parentDir.exists()) {
-                parentDir.mkdir();
-            }
-            String databaseDirName = "databases";
-            File databaseDir = new File(parentDir, databaseDirName);
-            Class<?> driver = EmbeddedDriver.class;
-            driver.newInstance();
-            CONNECTION = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s", databaseDir.getAbsolutePath(), !databaseDir.exists()));
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    LOGGER.info("running {} shutdown hooks", QueryPanelDemo.class);
-                    if(QueryPanelDemo.CONNECTION != null) {
-                        try {
-                            QueryPanelDemo.CONNECTION.close();
-                        } catch (SQLException ex) {
-                            LOGGER.error("an exception during shutdown of the database connection occured", ex);
-                        }
-                    }
-                }
-            });
-            ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
-        } catch (SQLException | InstantiationException | IllegalAccessException ex) {
-            JOptionPane.showMessageDialog(null, //parentComponent
-                    String.format("<html>An unexpected exception occured during the initialization of resources (%s)</html>", ex.getMessage()), //message
-                    String.format("Error in initialization of resources - %s", APP_NAME), //title
-                    JOptionPane.ERROR_MESSAGE //type
-            );
-            LOGGER.error("An unexpected exception occured during the initialization of resources (see nested exception for details)", ex);
-            throw new ExceptionInInitializerError(ex);
-        }
-    }
-    private final EntityManager entityManager;
     private static Long nextId = 1L;
     private final static Random RANDOM = new Random();
     private ReflectionFormBuilder reflectionFormBuilder;
@@ -103,8 +57,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     /**
      * Creates new form Demo
      */
-    public QueryPanelDemo() {
-        this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
+    public QueryPanelDemo() throws SQLException, IOException, StorageException {
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
                 new JPACachedFieldRetriever());
@@ -127,7 +80,7 @@ public class QueryPanelDemo extends javax.swing.JFrame {
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
         try {
-            return new QueryPanel<>(this.entityManager,
+            return new QueryPanel<>(getStorage(),
                     entityClass,
                     messageHandler,
                     reflectionFormBuilder,
@@ -137,6 +90,11 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected String getAppName() {
+        return APP_NAME;
     }
 
     /**
@@ -209,35 +167,38 @@ public class QueryPanelDemo extends javax.swing.JFrame {
     private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAButtonActionPerformed
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newA);
-        this.entityManager.getTransaction().commit();
+        try {
+            getStorage().store(newA);
+        } catch (StorageException ex) {
+            throw new RuntimeException(ex);
+        }
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }//GEN-LAST:event_createAButtonActionPerformed
 
     private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBButtonActionPerformed
         Long nextId0 = getNextId();
-        CriteriaQuery<EntityA> criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(EntityA.class);
-        Root<EntityA> queryRoot = criteriaQuery.from(EntityA.class);
-        criteriaQuery.select(queryRoot);
-        List<EntityA> as = this.entityManager.createQuery(criteriaQuery).getResultList();
+        List<EntityA> as = getStorage().runQueryAll(EntityA.class);
         EntityA randomA = null;
         if(!as.isEmpty()) {
             randomA = as.get(RANDOM.nextInt(as.size()));
         }
         EntityB newB = new EntityB(nextId0, RANDOM.nextInt(), randomA);
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newB);
-        this.entityManager.getTransaction().commit();
+        try {
+            getStorage().store(newB);
+        } catch (StorageException ex) {
+            throw new RuntimeException(ex);
+        }
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
     }//GEN-LAST:event_createBButtonActionPerformed
 
     private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCButtonActionPerformed
         Long nextId0 = getNextId();
         EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newC);
-        this.entityManager.getTransaction().commit();
+        try {
+            getStorage().store(newC);
+        } catch (StorageException ex) {
+            throw new RuntimeException(ex);
+        }
         LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
     }//GEN-LAST:event_createCButtonActionPerformed
 
@@ -270,7 +231,11 @@ public class QueryPanelDemo extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new QueryPanelDemo().setVisible(true);
+                try {
+                    new QueryPanelDemo().setVisible(true);
+                } catch (SQLException | IOException | StorageException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

@@ -14,28 +14,20 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
-import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import java.util.logging.Level;
 import javax.swing.BoxLayout;
-import javax.swing.JOptionPane;
-import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.ConfirmMessageHandler;
-import richtercloud.message.handler.DialogConfirmMessageHandler;
-import richtercloud.message.handler.LoggerMessageHandler;
-import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
+import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyUsageStatisticsStorage;
+import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
 import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
@@ -43,100 +35,51 @@ import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.IdGenerator;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.SequentialIdGenerator;
+import richtercloud.reflection.form.builder.jpa.WarningHandler;
+import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
-import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.jpa.WarningHandler;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
-import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
-import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
+import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
  *
  * @author richter
  */
-public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
-    private final static EntityManagerFactory ENTITY_MANAGER_FACTORY;
-    private final static Connection CONNECTION;
+public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final static String APP_NAME = "reflection-form-builder-demo";
-    private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(JPAReflectionFormBuilderDemo.class);
     private static final long serialVersionUID = 1L;
-    static {
-        try {
-            File parentDir = new File("/tmp/reflection-form-builder-demo");
-            if(!parentDir.exists()) {
-                parentDir.mkdir();
-            }
-            String databaseDirName = "databases";
-            File databaseDir = new File(parentDir, databaseDirName);
-            Class<?> driver = EmbeddedDriver.class;
-            driver.newInstance();
-            CONNECTION = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s", databaseDir.getAbsolutePath(), !databaseDir.exists()));
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    LOGGER.info("running {} shutdown hooks", QueryPanelDemo.class);
-                    if(CONNECTION != null) {
-                        try {
-                            CONNECTION.close();
-                        } catch (SQLException ex) {
-                            LOGGER.error("an exception during shutdown of the database connection occured", ex);
-                        }
-                    }
-                }
-            });
-            ENTITY_MANAGER_FACTORY = Persistence.createEntityManagerFactory("richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
-        } catch (SQLException | InstantiationException | IllegalAccessException ex) {
-            JOptionPane.showMessageDialog(null, //parentComponent
-                    String.format("<html>An unexpected exception occured during the initialization of resources (%s)</html>", ex.getMessage()), //message
-                    String.format("Error in initialization of resources - %s", APP_NAME), //title
-                    JOptionPane.ERROR_MESSAGE //type
-            );
-            LOGGER.error("An unexpected exception occured during the initialization of resources (see nested exception for details)", ex);
-            throw new ExceptionInInitializerError(ex);
-        }
-    }
-    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
-    private final ConfirmMessageHandler confirmMessageHandler = new DialogConfirmMessageHandler(this);
-    private final IdGenerator idGenerator = SequentialIdGenerator.getInstance();
-    private final IdApplier idApplier = new GeneratedValueIdApplier();
     private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
     private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
     private final AmountMoneyExchangeRateRetriever amountMoneyConversionRateRetriever = new FailsafeAmountMoneyExchangeRateRetriever();
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
-    private final EntityManager entityManager;
     private ReflectionFormPanel reflectionPanel;
 
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() {
+    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException {
         initComponents();
-        this.entityManager = ENTITY_MANAGER_FACTORY.createEntityManager();
+
         EntityA entityA = new EntityA(8484L, 24, "klfds");
         EntityB entityB = new EntityB(38923L, 23, entityA);
         EntityC entityC1 = new EntityC(324L, 33, "b", "d");
         EntityC entityC2 = new EntityC(325L, 33, "b", "d");
-        entityManager.getTransaction().begin();
-        entityManager.persist(entityA);
-        entityManager.persist(entityB);
-        entityManager.persist(entityC1);
-        entityManager.persist(entityC2);
-        entityManager.getTransaction().commit();
+        getStorage().store(entityA);
+        getStorage().store(entityB);
+        getStorage().store(entityC1);
+        getStorage().store(entityC2);
         String bidirectionalHelpDialogTitle = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
-        jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(entityManager,
+        jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(getStorage(),
                 20,
-                messageHandler,
+                getMessageHandler(),
                 amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyConversionRateRetriever,
@@ -144,33 +87,37 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyConversionRateRetriever,
-                messageHandler);
-        JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(entityManager,
+                getMessageHandler());
+        JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(getStorage(),
                 20,
-                messageHandler,
+                getMessageHandler(),
                 bidirectionalHelpDialogTitle);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
                 this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
         ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
-                messageHandler,
+                getMessageHandler(),
                 embeddableFieldHandler);
         try {
             Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
-                    new IntegerListFieldHandler(messageHandler));
+                    new IntegerListFieldHandler(getMessageHandler()));
             classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
-                    new JPAEntityListFieldHandler(entityManager, messageHandler, bidirectionalHelpDialogTitle));
+                    new JPAEntityListFieldHandler(getStorage(),
+                            getMessageHandler(),
+                            bidirectionalHelpDialogTitle));
             classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
-                    new JPAEntityListFieldHandler(entityManager, messageHandler, bidirectionalHelpDialogTitle));
+                    new JPAEntityListFieldHandler(getStorage(),
+                            getMessageHandler(),
+                            bidirectionalHelpDialogTitle));
             Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
-            ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(entityManager,
-                    messageHandler,
+            ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
+                    getMessageHandler(),
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     bidirectionalHelpDialogTitle);
-            ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(entityManager,
-                    messageHandler,
+            ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
+                    getMessageHandler(),
                     bidirectionalHelpDialogTitle);
             JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
@@ -179,15 +126,15 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
                     elementCollectionTypeHandler,
                     toManyTypeHandler,
                     toOneTypeHandler,
-                    messageHandler,
+                    getMessageHandler(),
                     fieldRetriever,
-                    idApplier);
-            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(entityManager,
+                    getIdApplier());
+            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(getStorage(),
                     APP_NAME,
-                    messageHandler,
-                    confirmMessageHandler,
+                    getMessageHandler(),
+                    getConfirmMessageHandler(),
                     fieldRetriever,
-                    idApplier,
+                    getIdApplier(),
                     new HashMap<Class<?>, WarningHandler<?>>() //warningHandlers
             );
             try {
@@ -205,6 +152,11 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected String getAppName() {
+        return APP_NAME;
     }
 
     /**
@@ -298,7 +250,11 @@ public class JPAReflectionFormBuilderDemo extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new JPAReflectionFormBuilderDemo().setVisible(true);
+                try {
+                    new JPAReflectionFormBuilderDemo().setVisible(true);
+                } catch (IOException | StorageException | SQLException ex) {
+                    java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }

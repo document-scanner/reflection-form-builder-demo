@@ -14,12 +14,11 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.swing.GroupLayout;
 import javax.swing.JOptionPane;
 import org.slf4j.Logger;
@@ -33,15 +32,20 @@ import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
+import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
+import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
+import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
  *
  * @author richter
  */
-public class QueryListPanelDemo extends javax.swing.JFrame {
+public class QueryListPanelDemo extends AbstractDemo {
     private static final long serialVersionUID = 1L;
-    private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(QueryListPanelDemo.class);
     private final static Random RANDOM = new Random();
+    private final static String APP_NAME = "Query list panel demo";
     private static Long nextId = 1L;
     private final static String BIDIRECTIONAL_HELP_DIALOG_TITLE = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
     private static synchronized Long getNextId() {
@@ -77,11 +81,14 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new QueryListPanelDemo().setVisible(true);
+                try {
+                    new QueryListPanelDemo().setVisible(true);
+                } catch (IOException | SQLException | StorageException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }
-    private EntityManager entityManager;
     private ReflectionFormBuilder reflectionFormBuilder;
     private Class<?> entityClass = EntityA.class;
     private List<Object> initialValues = new LinkedList<>();
@@ -94,8 +101,10 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
     /**
      * Creates new form ListQueryPanelDemo
      */
-    public QueryListPanelDemo() {
-        this.entityManager = QueryPanelDemo.ENTITY_MANAGER_FACTORY.createEntityManager();
+    public QueryListPanelDemo() throws IOException, SQLException, StorageException {
+        PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
+                getDatabaseDir(),
+                getSchemeChecksumFile()));
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
                 mappingFieldHandlerFactory.generatePrimitiveMapping());
@@ -103,7 +112,7 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
                 messageHandler,
                 new JPACachedFieldRetriever());
         try {
-            this.queryListPanel = new QueryListPanel(entityManager,
+            this.queryListPanel = new QueryListPanel(getStorage(),
                 reflectionFormBuilder,
                 entityClass,
                 messageHandler,
@@ -132,7 +141,11 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         createAButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createAButtonActionPerformed(evt);
+                try {
+                    createAButtonActionPerformed(evt);
+                } catch (StorageException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -140,7 +153,11 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         createCButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createCButtonActionPerformed(evt);
+                try {
+                    createCButtonActionPerformed(evt);
+                } catch (StorageException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -148,7 +165,11 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         createBButton.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createBButtonActionPerformed(evt);
+                try {
+                    createBButtonActionPerformed(evt);
+                } catch (StorageException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 
@@ -170,38 +191,34 @@ public class QueryListPanelDemo extends javax.swing.JFrame {
         pack();
     }
 
-    private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newA);
-        this.entityManager.getTransaction().commit();
+        getStorage().store(newA);
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }
 
-    private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
         EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newC);
-        this.entityManager.getTransaction().commit();
+        getStorage().store(newC);
         LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
     }
 
-    private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) {
+    private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
-        CriteriaQuery<EntityA> criteriaQuery = this.entityManager.getCriteriaBuilder().createQuery(EntityA.class);
-        Root<EntityA> queryRoot = criteriaQuery.from(EntityA.class);
-        criteriaQuery.select(queryRoot);
-        List<EntityA> as = this.entityManager.createQuery(criteriaQuery).getResultList();
+        List<EntityA> as = getStorage().runQueryAll(EntityA.class);
         EntityA randomA = null;
         if(!as.isEmpty()) {
             randomA = as.get(RANDOM.nextInt(as.size()));
         }
         EntityB newB = new EntityB(nextId0, RANDOM.nextInt(), randomA);
-        this.entityManager.getTransaction().begin();
-        this.entityManager.persist(newB);
-        this.entityManager.getTransaction().commit();
+        getStorage().store(newB);
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
+    }
+
+    @Override
+    protected String getAppName() {
+        return APP_NAME;
     }
 }
