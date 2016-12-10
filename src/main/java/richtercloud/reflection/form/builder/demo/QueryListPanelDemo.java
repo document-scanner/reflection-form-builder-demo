@@ -103,8 +103,9 @@ public class QueryListPanelDemo extends AbstractDemo {
      */
     public QueryListPanelDemo() throws IOException, SQLException, StorageException {
         PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
-                getDatabaseDir(),
-                getSchemeChecksumFile()));
+                getDatabaseName(),
+                getSchemeChecksumFile()),
+                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
                 mappingFieldHandlerFactory.generatePrimitiveMapping());

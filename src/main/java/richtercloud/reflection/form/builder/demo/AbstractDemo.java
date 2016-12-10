@@ -47,7 +47,7 @@ public abstract class AbstractDemo extends JFrame {
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
     private final ConfirmMessageHandler confirmMessageHandler = new DialogConfirmMessageHandler(this);
     private final IdApplier idApplier = new GeneratedValueIdApplier();
-    private final File databaseDir;
+    private final String databaseName;
     private final File parentDir;
     private final PersistenceStorage storage;
     private final Set<Class<?>> entityClasses;
@@ -59,12 +59,14 @@ public abstract class AbstractDemo extends JFrame {
             parentDir.mkdir();
         }
         String databaseDirName = "databases";
-        this.databaseDir = new File(parentDir, databaseDirName);
+        this.databaseName = new File(parentDir, databaseDirName).getAbsolutePath();
 
         try {
             Class<?> driver = EmbeddedDriver.class;
             driver.newInstance();
-            connection = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s", databaseDir.getAbsolutePath(), !databaseDir.exists()));
+            connection = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s",
+                    databaseName,
+                    !new File(databaseName).exists()));
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
@@ -93,8 +95,9 @@ public abstract class AbstractDemo extends JFrame {
                 EntityD.class));
         this.schemeChecksumFile = new File(getParentDir(), "scheme-checksum");
         this.storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(entityClasses,
-                getDatabaseDir(),
-                schemeChecksumFile));
+                getDatabaseName(),
+                schemeChecksumFile),
+                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
     }
 
     protected abstract String getAppName();
@@ -103,8 +106,8 @@ public abstract class AbstractDemo extends JFrame {
         return parentDir;
     }
 
-    public File getDatabaseDir() {
-        return databaseDir;
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public MessageHandler getMessageHandler() {
