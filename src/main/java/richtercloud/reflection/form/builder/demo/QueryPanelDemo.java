@@ -32,6 +32,8 @@ import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
+import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
+import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
@@ -57,7 +59,7 @@ public class QueryPanelDemo extends AbstractDemo {
     /**
      * Creates new form Demo
      */
-    public QueryPanelDemo() throws SQLException, IOException, StorageException {
+    public QueryPanelDemo() throws SQLException, IOException, StorageException, StorageCreationException, StorageConfInitializationException {
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
                 new JPACachedFieldRetriever());
@@ -233,7 +235,7 @@ public class QueryPanelDemo extends AbstractDemo {
             public void run() {
                 try {
                     new QueryPanelDemo().setVisible(true);
-                } catch (SQLException | IOException | StorageException ex) {
+                } catch (SQLException | IOException | StorageException | StorageCreationException | StorageConfInitializationException ex) {
                     throw new RuntimeException(ex);
                 }
             }

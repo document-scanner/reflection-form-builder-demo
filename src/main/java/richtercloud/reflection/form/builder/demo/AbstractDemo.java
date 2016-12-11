@@ -36,6 +36,8 @@ import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
 import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
+import richtercloud.reflection.form.builder.storage.StorageCreationException;
 
 /**
  *
@@ -53,7 +55,7 @@ public abstract class AbstractDemo extends JFrame {
     private final Set<Class<?>> entityClasses;
     private final File schemeChecksumFile;
 
-    public AbstractDemo() throws SQLException, IOException {
+    public AbstractDemo() throws SQLException, IOException, StorageConfInitializationException, StorageCreationException {
         this.parentDir = new File("/tmp/reflection-form-builder-demo");
         if(!parentDir.exists()) {
             parentDir.mkdir();
