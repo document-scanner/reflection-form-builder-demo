@@ -34,7 +34,9 @@ import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
+import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
@@ -114,13 +116,15 @@ public class QueryListPanelDemo extends AbstractDemo {
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
                 new JPACachedFieldRetriever());
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(this.reflectionFormBuilder.getFieldRetriever());
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
-                reflectionFormBuilder,
-                entityClass,
-                messageHandler,
-                this.initialValues,
-                BIDIRECTIONAL_HELP_DIALOG_TITLE);
+                    reflectionFormBuilder,
+                    entityClass,
+                    messageHandler,
+                    this.initialValues,
+                    BIDIRECTIONAL_HELP_DIALOG_TITLE,
+                    fieldInitializer);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(this, //parent
                     String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),

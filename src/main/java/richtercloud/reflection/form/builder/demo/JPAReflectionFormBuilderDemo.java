@@ -41,6 +41,8 @@ import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.WarningHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
+import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
+import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
@@ -100,6 +102,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 getMessageHandler(),
                 embeddableFieldHandler);
+        JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         try {
             Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
@@ -107,21 +111,24 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
                     new JPAEntityListFieldHandler(getStorage(),
                             getMessageHandler(),
-                            bidirectionalHelpDialogTitle));
+                            bidirectionalHelpDialogTitle,
+                            fieldInitializer));
             classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
                     new JPAEntityListFieldHandler(getStorage(),
                             getMessageHandler(),
-                            bidirectionalHelpDialogTitle));
+                            bidirectionalHelpDialogTitle,
+                            fieldInitializer));
             Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
             ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
                     getMessageHandler(),
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
-                    bidirectionalHelpDialogTitle);
+                    bidirectionalHelpDialogTitle,
+                    fieldInitializer);
             ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
                     getMessageHandler(),
-                    bidirectionalHelpDialogTitle);
-            JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+                    bidirectionalHelpDialogTitle,
+                    fieldInitializer);
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
                     amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
                     primitiveMapping,
