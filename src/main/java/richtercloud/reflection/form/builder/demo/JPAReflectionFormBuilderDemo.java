@@ -42,7 +42,7 @@ import richtercloud.reflection.form.builder.jpa.WarningHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import richtercloud.reflection.form.builder.jpa.storage.NoOpFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
@@ -103,7 +103,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 getMessageHandler(),
                 embeddableFieldHandler);
         JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
-        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
+        FieldInitializer fieldInitializer = new NoOpFieldInitializer();
         try {
             Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
