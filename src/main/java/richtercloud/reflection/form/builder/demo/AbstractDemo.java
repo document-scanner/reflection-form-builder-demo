@@ -99,7 +99,9 @@ public abstract class AbstractDemo extends JFrame {
         this.storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(entityClasses,
                 getDatabaseName(),
                 schemeChecksumFile),
-                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
+                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU",
+                1 //parallelQuerycount
+        );
     }
 
     protected abstract String getAppName();

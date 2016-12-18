@@ -32,11 +32,11 @@ import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.NoOpFieldInitializer;
+import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
+import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 
 /**
  *
@@ -83,7 +83,7 @@ public class QueryPanelDemo extends AbstractDemo {
                 bidirectionalHelpDialogTitle,
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
-        FieldInitializer fieldInitializer = new NoOpFieldInitializer();
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(reflectionFormBuilder.getFieldRetriever());
         try {
             return new QueryPanel<>(getStorage(),
                     entityClass,

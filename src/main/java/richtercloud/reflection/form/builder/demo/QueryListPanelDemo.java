@@ -35,8 +35,8 @@ import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.NoOpFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
@@ -109,14 +109,16 @@ public class QueryListPanelDemo extends AbstractDemo {
         PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
                 getDatabaseName(),
                 getSchemeChecksumFile()),
-                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU");
+                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU",
+                1 //parallelQueryCount
+        );
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
                 mappingFieldHandlerFactory.generatePrimitiveMapping());
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
                 new JPACachedFieldRetriever());
-        FieldInitializer fieldInitializer = new NoOpFieldInitializer();
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(this.reflectionFormBuilder.getFieldRetriever());
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
                     reflectionFormBuilder,
