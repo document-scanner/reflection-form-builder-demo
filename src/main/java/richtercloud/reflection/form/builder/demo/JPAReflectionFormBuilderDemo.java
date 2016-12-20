@@ -45,7 +45,7 @@ import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTyp
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
-import richtercloud.reflection.form.builder.storage.StorageConfInitializationException;
+import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
@@ -69,7 +69,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException, StorageCreationException, StorageConfInitializationException {
+    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException, StorageCreationException, StorageConfValidationException {
         initComponents();
 
         EntityA entityA = new EntityA(8484L, 24, "klfds");
@@ -261,7 +261,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             public void run() {
                 try {
                     new JPAReflectionFormBuilderDemo().setVisible(true);
-                } catch (IOException | StorageException | SQLException | StorageCreationException | StorageConfInitializationException ex) {
+                } catch (IOException | StorageException | SQLException | StorageCreationException | StorageConfValidationException ex) {
                     java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
