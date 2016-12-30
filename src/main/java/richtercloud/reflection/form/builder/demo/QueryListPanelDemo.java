@@ -31,6 +31,8 @@ import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
+import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
@@ -119,6 +121,7 @@ public class QueryListPanelDemo extends AbstractDemo {
                 messageHandler,
                 new JPACachedFieldRetriever());
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(this.reflectionFormBuilder.getFieldRetriever());
+        InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
                     reflectionFormBuilder,
@@ -126,7 +129,8 @@ public class QueryListPanelDemo extends AbstractDemo {
                     messageHandler,
                     this.initialValues,
                     BIDIRECTIONAL_HELP_DIALOG_TITLE,
-                    fieldInitializer);
+                    fieldInitializer,
+                    initialQueryTextGenerator);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(this, //parent
                     String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),

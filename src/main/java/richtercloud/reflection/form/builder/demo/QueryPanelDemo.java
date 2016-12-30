@@ -31,6 +31,8 @@ import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
+import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
+import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
@@ -84,6 +86,7 @@ public class QueryPanelDemo extends AbstractDemo {
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(reflectionFormBuilder.getFieldRetriever());
+        InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
         try {
             return new QueryPanel<>(getStorage(),
                     entityClass,
@@ -92,7 +95,8 @@ public class QueryPanelDemo extends AbstractDemo {
                     null, //initialValue
                     bidirectionalControlPanel,
                     ListSelectionModel.SINGLE_SELECTION,
-                    fieldInitializer);
+                    fieldInitializer,
+                    initialQueryTextGenerator);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
