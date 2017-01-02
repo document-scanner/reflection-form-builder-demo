@@ -31,6 +31,7 @@ import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
 import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
@@ -117,14 +118,15 @@ public class QueryListPanelDemo extends AbstractDemo {
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
                 mappingFieldHandlerFactory.generatePrimitiveMapping());
+        JPAFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
                 messageHandler,
-                new JPACachedFieldRetriever());
-        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(this.reflectionFormBuilder.getFieldRetriever());
+                fieldRetriever);
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
-                    reflectionFormBuilder,
+                    fieldRetriever,
                     entityClass,
                     messageHandler,
                     this.initialValues,

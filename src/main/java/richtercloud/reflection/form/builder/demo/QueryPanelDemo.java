@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.message.handler.LoggerMessageHandler;
 import richtercloud.message.handler.MessageHandler;
+import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
@@ -59,6 +60,7 @@ public class QueryPanelDemo extends AbstractDemo {
     }
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
     private final Class<?> entityClass = EntityA.class;
+    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
 
     /**
      * Creates new form Demo
@@ -78,20 +80,20 @@ public class QueryPanelDemo extends AbstractDemo {
     private QueryPanel createQueryPanel() {
         String bidirectionalHelpDialogTitle = String.format("%s - Info", QueryPanelDemo.class.getSimpleName());
 
-        List<Field> entityClassFields = reflectionFormBuilder.getFieldRetriever().retrieveRelevantFields(entityClass);
+        List<Field> entityClassFields = fieldRetriever.retrieveRelevantFields(entityClass);
         Set<Field> mappedFieldCandidates = QueryPanel.retrieveMappedFieldCandidates(entityClass,
                         entityClassFields);
         BidirectionalControlPanel bidirectionalControlPanel = new BidirectionalControlPanel(entityClass,
                 bidirectionalHelpDialogTitle,
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
-        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(reflectionFormBuilder.getFieldRetriever());
+        FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
         try {
             return new QueryPanel<>(getStorage(),
                     entityClass,
                     messageHandler,
-                    reflectionFormBuilder,
+                    fieldRetriever,
                     null, //initialValue
                     bidirectionalControlPanel,
                     ListSelectionModel.SINGLE_SELECTION,

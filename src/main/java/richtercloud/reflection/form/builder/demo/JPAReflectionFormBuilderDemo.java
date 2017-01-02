@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import javax.swing.BoxLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
@@ -67,6 +68,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
     private ReflectionFormPanel reflectionPanel;
+    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
 
     /**
      * Creates new form JPAReflectionFormBuilderDemo
@@ -89,7 +91,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyConversionRateRetriever,
-                bidirectionalHelpDialogTitle);
+                bidirectionalHelpDialogTitle,
+                fieldRetriever);
         this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyConversionRateRetriever,
@@ -97,13 +100,15 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(getStorage(),
                 20,
                 getMessageHandler(),
-                bidirectionalHelpDialogTitle);
+                bidirectionalHelpDialogTitle,
+                fieldRetriever);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
                 this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
         ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 getMessageHandler(),
-                embeddableFieldHandler);
+                embeddableFieldHandler,
+                fieldRetriever);
         JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
@@ -116,13 +121,15 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                             getMessageHandler(),
                             bidirectionalHelpDialogTitle,
                             fieldInitializer,
-                            initialQueryTextGenerator));
+                            initialQueryTextGenerator,
+                            fieldRetriever));
             classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
                     new JPAEntityListFieldHandler(getStorage(),
                             getMessageHandler(),
                             bidirectionalHelpDialogTitle,
                             fieldInitializer,
-                            initialQueryTextGenerator));
+                            initialQueryTextGenerator,
+                            fieldRetriever));
             Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
             ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
                     getMessageHandler(),
@@ -130,12 +137,14 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     bidirectionalHelpDialogTitle,
                     fieldInitializer,
-                    initialQueryTextGenerator);
+                    initialQueryTextGenerator,
+                    fieldRetriever);
             ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
                     getMessageHandler(),
                     bidirectionalHelpDialogTitle,
                     fieldInitializer,
-                    initialQueryTextGenerator);
+                    initialQueryTextGenerator,
+                    fieldRetriever);
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
                     amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
                     primitiveMapping,
