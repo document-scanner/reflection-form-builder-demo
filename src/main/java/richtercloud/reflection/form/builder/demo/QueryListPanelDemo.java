@@ -113,7 +113,8 @@ public class QueryListPanelDemo extends AbstractDemo {
                 getDatabaseName(),
                 getSchemeChecksumFile()),
                 "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU",
-                1 //parallelQueryCount
+                1, //parallelQueryCount
+                getFieldRetriever()
         );
         MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),

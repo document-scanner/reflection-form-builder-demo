@@ -31,6 +31,8 @@ import richtercloud.message.handler.ConfirmMessageHandler;
 import richtercloud.message.handler.DialogConfirmMessageHandler;
 import richtercloud.message.handler.LoggerMessageHandler;
 import richtercloud.message.handler.MessageHandler;
+import richtercloud.reflection.form.builder.FieldRetriever;
+import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
 import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
@@ -54,6 +56,7 @@ public abstract class AbstractDemo extends JFrame {
     private final PersistenceStorage storage;
     private final Set<Class<?>> entityClasses;
     private final File schemeChecksumFile;
+    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
 
     public AbstractDemo() throws SQLException, IOException, StorageConfValidationException, StorageCreationException {
         this.parentDir = new File("/tmp/reflection-form-builder-demo");
@@ -100,7 +103,8 @@ public abstract class AbstractDemo extends JFrame {
                 getDatabaseName(),
                 schemeChecksumFile),
                 "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU",
-                1 //parallelQuerycount
+                1, //parallelQuerycount
+                fieldRetriever
         );
     }
 
@@ -136,5 +140,9 @@ public abstract class AbstractDemo extends JFrame {
 
     public File getSchemeChecksumFile() {
         return schemeChecksumFile;
+    }
+
+    public FieldRetriever getFieldRetriever() {
+        return fieldRetriever;
     }
 }
