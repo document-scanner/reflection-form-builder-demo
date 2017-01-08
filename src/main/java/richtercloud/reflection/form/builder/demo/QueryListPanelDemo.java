@@ -14,6 +14,7 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -32,8 +33,10 @@ import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
-import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
+import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
@@ -90,7 +93,7 @@ public class QueryListPanelDemo extends AbstractDemo {
             public void run() {
                 try {
                     new QueryListPanelDemo().setVisible(true);
-                } catch (IOException | SQLException | StorageException | StorageCreationException | StorageConfValidationException ex) {
+                } catch (IOException | SQLException | StorageException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -108,7 +111,7 @@ public class QueryListPanelDemo extends AbstractDemo {
     /**
      * Creates new form ListQueryPanelDemo
      */
-    public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException {
+    public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException {
         PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
                 getDatabaseName(),
                 getSchemeChecksumFile()),
@@ -124,7 +127,13 @@ public class QueryListPanelDemo extends AbstractDemo {
                 messageHandler,
                 fieldRetriever);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
-        InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
+        File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
+                null);
+        QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
+                getEntityClasses(),
+                false,
+                getMessageHandler());
+        QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
                     fieldRetriever,
@@ -133,7 +142,7 @@ public class QueryListPanelDemo extends AbstractDemo {
                     this.initialValues,
                     BIDIRECTIONAL_HELP_DIALOG_TITLE,
                     fieldInitializer,
-                    initialQueryTextGenerator);
+                    entryStorage);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(this, //parent
                     String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),

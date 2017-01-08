@@ -14,6 +14,7 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
@@ -42,8 +43,12 @@ import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.WarningHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
-import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
+import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
+import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
@@ -51,8 +56,6 @@ import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMon
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 
 /**
  *
@@ -73,7 +76,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException, StorageCreationException, StorageConfValidationException {
+    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException {
         initComponents();
 
         EntityA entityA = new EntityA(8484L, 24, "klfds");
@@ -111,7 +114,13 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 fieldRetriever);
         JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
-        InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
+        File entryStorageFile = File.createTempFile(JPAReflectionFormBuilderDemo.class.getSimpleName(),
+                null);
+        QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
+                getEntityClasses(),
+                false, //forbidSubtypes
+                getMessageHandler());
+        QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
         try {
             Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
             classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
@@ -121,14 +130,14 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                             getMessageHandler(),
                             bidirectionalHelpDialogTitle,
                             fieldInitializer,
-                            initialQueryTextGenerator,
+                            entryStorage,
                             fieldRetriever));
             classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
                     new JPAEntityListFieldHandler(getStorage(),
                             getMessageHandler(),
                             bidirectionalHelpDialogTitle,
                             fieldInitializer,
-                            initialQueryTextGenerator,
+                            entryStorage,
                             fieldRetriever));
             Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
             ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
@@ -137,13 +146,13 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                     jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                     bidirectionalHelpDialogTitle,
                     fieldInitializer,
-                    initialQueryTextGenerator,
+                    entryStorage,
                     fieldRetriever);
             ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
                     getMessageHandler(),
                     bidirectionalHelpDialogTitle,
                     fieldInitializer,
-                    initialQueryTextGenerator,
+                    entryStorage,
                     fieldRetriever);
             FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
                     amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
@@ -277,7 +286,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             public void run() {
                 try {
                     new JPAReflectionFormBuilderDemo().setVisible(true);
-                } catch (IOException | StorageException | SQLException | StorageCreationException | StorageConfValidationException ex) {
+                } catch (IOException | StorageException | SQLException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException ex) {
                     java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }

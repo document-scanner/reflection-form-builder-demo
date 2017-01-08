@@ -14,6 +14,7 @@
  */
 package richtercloud.reflection.form.builder.demo;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -29,17 +30,19 @@ import richtercloud.message.handler.LoggerMessageHandler;
 import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.HistoryEntry;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
-import richtercloud.reflection.form.builder.jpa.panels.DefaultInitialQueryTextGenerator;
-import richtercloud.reflection.form.builder.jpa.panels.InitialQueryTextGenerator;
+import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
+import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 
 /**
  *
@@ -52,11 +55,11 @@ public class QueryPanelDemo extends AbstractDemo {
     private static Long nextId = 1L;
     private final static Random RANDOM = new Random();
     private ReflectionFormBuilder reflectionFormBuilder;
-    private final static List<HistoryEntry> QUERY_PANEL_INITIAL_HISTORY = new LinkedList<>();
+    private final static List<QueryHistoryEntry> QUERY_PANEL_INITIAL_HISTORY = new LinkedList<>();
     static {
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select a from EntityA a", 1, new Date()));
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select b from EntityB b", 5, new Date()));
-        QUERY_PANEL_INITIAL_HISTORY.add(new HistoryEntry("select c from EntityC c", 3, new Date()));
+        QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select a from EntityA a", 1, new Date()));
+        QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select b from EntityB b", 5, new Date()));
+        QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select c from EntityC c", 3, new Date()));
     }
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
     private final Class<?> entityClass = EntityA.class;
@@ -88,7 +91,23 @@ public class QueryPanelDemo extends AbstractDemo {
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
-        InitialQueryTextGenerator initialQueryTextGenerator = new DefaultInitialQueryTextGenerator();
+        File entryStorageFile;
+        try {
+            entryStorageFile = File.createTempFile(QueryPanelDemo.class.getSimpleName(),
+                    null);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
+                getEntityClasses(),
+                false,
+                getMessageHandler());
+        QueryHistoryEntryStorage entryStorage;
+        try {
+            entryStorage = entryStorageFactory.create();
+        } catch (QueryHistoryEntryStorageCreationException ex) {
+            throw new RuntimeException(ex);
+        }
         try {
             return new QueryPanel<>(getStorage(),
                     entityClass,
@@ -98,7 +117,7 @@ public class QueryPanelDemo extends AbstractDemo {
                     bidirectionalControlPanel,
                     ListSelectionModel.SINGLE_SELECTION,
                     fieldInitializer,
-                    initialQueryTextGenerator);
+                    entryStorage);
         } catch (IllegalArgumentException | IllegalAccessException ex) {
             throw new RuntimeException(ex);
         }
