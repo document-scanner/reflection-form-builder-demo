@@ -32,7 +32,9 @@ import richtercloud.message.handler.DialogConfirmMessageHandler;
 import richtercloud.message.handler.LoggerMessageHandler;
 import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.FieldRetriever;
+import richtercloud.reflection.form.builder.jpa.IdGenerator;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.MemorySequentialIdGenerator;
 import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
 import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
@@ -51,6 +53,7 @@ public abstract class AbstractDemo extends JFrame {
     private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
     private final ConfirmMessageHandler confirmMessageHandler = new DialogConfirmMessageHandler(this);
     private final IdApplier idApplier = new GeneratedValueIdApplier();
+    private final IdGenerator idGenerator = MemorySequentialIdGenerator.getInstance();
     private final String databaseName;
     private final File parentDir;
     private final PersistenceStorage storage;
@@ -124,6 +127,10 @@ public abstract class AbstractDemo extends JFrame {
 
     public IdApplier getIdApplier() {
         return idApplier;
+    }
+
+    public IdGenerator getIdGenerator() {
+        return idGenerator;
     }
 
     public ConfirmMessageHandler getConfirmMessageHandler() {

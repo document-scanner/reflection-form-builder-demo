@@ -21,7 +21,6 @@ import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
@@ -34,8 +33,8 @@ import richtercloud.message.handler.LoggerMessageHandler;
 import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
 import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
 import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateListener;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
@@ -57,55 +56,47 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     /**
      * Creates new form ReflectionFormBuilderDemo
      */
-    public ReflectionFormBuilderDemo() {
+    public ReflectionFormBuilderDemo() throws TransformationException, NoSuchFieldException {
         this.initComponents();
-        try {
-            MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
-            Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
-            classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(messageHandler));
-            classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(messageHandler));
-            classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder, Component>() {
-                @Override
-                public JComponent handle(Field field,
-                        Object instance,
-                        final FieldUpdateListener<FieldUpdateEvent<Boolean>> updateListener,
-                        ReflectionFormBuilder reflectionFormBuilder) {
-                    final JCheckBox retValue = new JCheckBox("This checkbox represents an EntityB!");
-                    retValue.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseReleased(MouseEvent e) {
-                            updateListener.onUpdate(new FieldUpdateEvent<>(retValue.isSelected()));
-                        }
-                    });
-                    return retValue;
-                }
-
-                @Override
-                public void reset(Component component) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-            });
-            FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
-                    fieldHandlerFactory.generatePrimitiveMapping());
-            ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
-                    "Field description",
-                    messageHandler,
-                    new JPACachedFieldRetriever());
-            try {
-                reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityA.class,
-                        null, //entityToUpdate
-                        fieldHandler
-                );
-            } catch (FieldHandlingException ex) {
-                throw new RuntimeException(ex);
+        MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
+        Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
+        classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(messageHandler));
+        classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(messageHandler));
+        classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder, Component>() {
+            @Override
+            public JComponent handle(Field field,
+                    Object instance,
+                    final FieldUpdateListener<FieldUpdateEvent<Boolean>> updateListener,
+                    ReflectionFormBuilder reflectionFormBuilder) {
+                final JCheckBox retValue = new JCheckBox("This checkbox represents an EntityB!");
+                retValue.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseReleased(MouseEvent e) {
+                        updateListener.onUpdate(new FieldUpdateEvent<>(retValue.isSelected()));
+                    }
+                });
+                return retValue;
             }
-            BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
-            this.mainPanel.setLayout(mainPanelLayout);
-            this.mainPanel.add(reflectionPanel);
-            this.mainPanel.validate();
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException ex) {
-            throw new RuntimeException(ex);
-        }
+
+            @Override
+            public void reset(Component component) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
+                fieldHandlerFactory.generatePrimitiveMapping());
+        ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
+                "Field description",
+                messageHandler,
+                new JPACachedFieldRetriever());
+        reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityA.class,
+                null, //entityToUpdate
+                fieldHandler
+        );
+        BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
+        this.mainPanel.setLayout(mainPanelLayout);
+        this.mainPanel.add(reflectionPanel);
+        this.mainPanel.validate();
     }
 
     /**
@@ -212,7 +203,11 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new ReflectionFormBuilderDemo().setVisible(true);
+                try {
+                    new ReflectionFormBuilderDemo().setVisible(true);
+                } catch (TransformationException | NoSuchFieldException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
     }

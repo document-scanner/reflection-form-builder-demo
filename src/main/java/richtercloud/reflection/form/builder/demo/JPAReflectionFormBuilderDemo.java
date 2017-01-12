@@ -16,16 +16,15 @@ package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.swing.BoxLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyUsageStatisticsStorage;
@@ -33,7 +32,6 @@ import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoney
 import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
@@ -43,10 +41,10 @@ import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.WarningHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
@@ -76,7 +74,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() throws IOException, StorageException, SQLException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException {
+    public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException {
+        super();
         initComponents();
 
         EntityA entityA = new EntityA(8484L, 24, "klfds");
@@ -121,71 +120,64 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 false, //forbidSubtypes
                 getMessageHandler());
         QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
-        try {
-            Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
-            classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
-                    new IntegerListFieldHandler(getMessageHandler()));
-            classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
-                    new JPAEntityListFieldHandler(getStorage(),
-                            getMessageHandler(),
-                            bidirectionalHelpDialogTitle,
-                            fieldInitializer,
-                            entryStorage,
-                            fieldRetriever));
-            classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
-                    new JPAEntityListFieldHandler(getStorage(),
-                            getMessageHandler(),
-                            bidirectionalHelpDialogTitle,
-                            fieldInitializer,
-                            entryStorage,
-                            fieldRetriever));
-            Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
-            ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
-                    getMessageHandler(),
-                    jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
-                    jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
-                    bidirectionalHelpDialogTitle,
-                    fieldInitializer,
-                    entryStorage,
-                    fieldRetriever);
-            ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
-                    getMessageHandler(),
-                    bidirectionalHelpDialogTitle,
-                    fieldInitializer,
-                    entryStorage,
-                    fieldRetriever);
-            FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
-                    amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
-                    primitiveMapping,
-                    elementCollectionTypeHandler,
-                    toManyTypeHandler,
-                    toOneTypeHandler,
-                    getMessageHandler(),
-                    fieldRetriever,
-                    getIdApplier());
-            JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(getStorage(),
-                    APP_NAME,
-                    getMessageHandler(),
-                    getConfirmMessageHandler(),
-                    fieldRetriever,
-                    getIdApplier(),
-                    new HashMap<Class<?>, WarningHandler<?>>() //warningHandlers
-            );
-            try {
-                reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
-                        null, //entityToUpdate
-                        fieldHandler
-                );
-            } catch (FieldHandlingException ex) {
-                throw new RuntimeException(ex);
-            }
-            BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
-            this.mainPanel.setLayout(mainPanelLayout);
-            this.mainPanel.add(reflectionPanel);
-            this.mainPanel.validate();
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException ex) {
-            throw new RuntimeException(ex);
-        }
+        Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
+        classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
+                new IntegerListFieldHandler(getMessageHandler()));
+        classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
+                new JPAEntityListFieldHandler(getStorage(),
+                        getMessageHandler(),
+                        bidirectionalHelpDialogTitle,
+                        fieldInitializer,
+                        entryStorage,
+                        fieldRetriever));
+        classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
+                new JPAEntityListFieldHandler(getStorage(),
+                        getMessageHandler(),
+                        bidirectionalHelpDialogTitle,
+                        fieldInitializer,
+                        entryStorage,
+                        fieldRetriever));
+        Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
+        ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
+                getMessageHandler(),
+                jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
+                bidirectionalHelpDialogTitle,
+                fieldInitializer,
+                entryStorage,
+                fieldRetriever);
+        ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
+                getMessageHandler(),
+                bidirectionalHelpDialogTitle,
+                fieldInitializer,
+                entryStorage,
+                fieldRetriever);
+        FieldHandler fieldHandler = new JPAMappingFieldHandler(jPAAmountMoneyClassMappingFactory.generateClassMapping(),
+                amountMoneyMappingFieldHandlerFactory.generateClassMapping(),
+                primitiveMapping,
+                elementCollectionTypeHandler,
+                toManyTypeHandler,
+                toOneTypeHandler,
+                getMessageHandler(),
+                fieldRetriever,
+                getIdApplier());
+        JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(getStorage(),
+                APP_NAME,
+                getMessageHandler(),
+                getConfirmMessageHandler(),
+                fieldRetriever,
+                getIdApplier(),
+                getIdGenerator(),
+                new HashMap<Class<?>, WarningHandler<?>>() //warningHandlers
+        );
+        reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
+                null, //entityToUpdate
+                fieldHandler
+        );
+        BoxLayout mainPanelLayout = new BoxLayout(this.mainPanel, BoxLayout.X_AXIS);
+        this.mainPanel.setLayout(mainPanelLayout);
+        this.mainPanel.add(reflectionPanel);
+        this.mainPanel.validate();
     }
 
     @Override
@@ -286,8 +278,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             public void run() {
                 try {
                     new JPAReflectionFormBuilderDemo().setVisible(true);
-                } catch (IOException | StorageException | SQLException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException ex) {
-                    java.util.logging.Logger.getLogger(JPAReflectionFormBuilderDemo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (StorageException | IOException | TransformationException | QueryHistoryEntryStorageCreationException | NoSuchFieldException | SQLException | StorageConfValidationException | StorageCreationException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });
