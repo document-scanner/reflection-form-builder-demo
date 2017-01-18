@@ -65,7 +65,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private static final long serialVersionUID = 1L;
     private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
     private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
-    private final AmountMoneyExchangeRateRetriever amountMoneyConversionRateRetriever = new FailsafeAmountMoneyExchangeRateRetriever();
+    private final File fileCacheDir;
+    private final AmountMoneyExchangeRateRetriever amountMoneyExchangeRateRetriever;
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
     private ReflectionFormPanel reflectionPanel;
@@ -77,6 +78,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException {
         super();
         initComponents();
+        fileCacheDir = File.createTempFile(JPAReflectionFormBuilderDemo.class.getSimpleName(), null);
+        amountMoneyExchangeRateRetriever = new FailsafeAmountMoneyExchangeRateRetriever(fileCacheDir);
 
         EntityA entityA = new EntityA(8484L, 24, "klfds");
         EntityB entityB = new EntityB(38923L, 23, entityA);
@@ -92,12 +95,12 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 getMessageHandler(),
                 amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
-                amountMoneyConversionRateRetriever,
+                amountMoneyExchangeRateRetriever,
                 bidirectionalHelpDialogTitle,
                 fieldRetriever);
         this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
-                amountMoneyConversionRateRetriever,
+                amountMoneyExchangeRateRetriever,
                 getMessageHandler());
         JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(getStorage(),
                 20,
