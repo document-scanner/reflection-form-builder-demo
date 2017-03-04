@@ -75,19 +75,18 @@ public abstract class AbstractDemo extends JFrame {
             connection = DriverManager.getConnection(String.format("jdbc:derby:%s;create=%s",
                     databaseName,
                     !new File(databaseName).exists()));
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    LOGGER.info("running {} shutdown hooks", QueryPanelDemo.class);
-                    if(connection != null) {
-                        try {
-                            connection.close();
-                        } catch (SQLException ex) {
-                            LOGGER.error("an exception during shutdown of the database connection occured", ex);
-                        }
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                LOGGER.info("running {} shutdown hooks", QueryPanelDemo.class);
+                if(connection != null) {
+                    try {
+                        connection.close();
+                    } catch (SQLException ex) {
+                        LOGGER.error("an exception during shutdown of the database connection occured", ex);
                     }
                 }
-            });
+            },
+            String.format("%s shutdown hook", getClass().getSimpleName())
+            ));
         } catch (InstantiationException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(null, //parentComponent
                     String.format("<html>An unexpected exception occured during the initialization of resources (%s)</html>", ex.getMessage()), //message
