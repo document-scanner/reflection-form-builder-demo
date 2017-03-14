@@ -24,8 +24,8 @@ import javax.swing.GroupLayout;
 import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.LoggerMessageHandler;
-import richtercloud.message.handler.MessageHandler;
+import richtercloud.message.handler.IssueHandler;
+import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
@@ -102,7 +102,7 @@ public class QueryListPanelDemo extends AbstractDemo {
     private ReflectionFormBuilder reflectionFormBuilder;
     private Class<?> entityClass = EntityA.class;
     private List<Object> initialValues = new LinkedList<>();
-    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final QueryListPanel queryListPanel;
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
@@ -119,12 +119,12 @@ public class QueryListPanelDemo extends AbstractDemo {
                 1, //parallelQueryCount
                 getFieldRetriever()
         );
-        MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
+        MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
                 mappingFieldHandlerFactory.generatePrimitiveMapping());
         JPAFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
-                messageHandler,
+                issueHandler,
                 fieldRetriever);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
@@ -132,13 +132,13 @@ public class QueryListPanelDemo extends AbstractDemo {
         QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
                 getEntityClasses(),
                 false,
-                getMessageHandler());
+                getIssueHandler());
         QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
         try {
             this.queryListPanel = new QueryListPanel(getStorage(),
                     fieldRetriever,
                     entityClass,
-                    messageHandler,
+                    issueHandler,
                     this.initialValues,
                     BIDIRECTIONAL_HELP_DIALOG_TITLE,
                     fieldInitializer,

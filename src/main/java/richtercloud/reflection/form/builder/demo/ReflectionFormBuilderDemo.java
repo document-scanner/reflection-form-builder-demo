@@ -29,8 +29,8 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.LoggerMessageHandler;
-import richtercloud.message.handler.MessageHandler;
+import richtercloud.message.handler.IssueHandler;
+import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.TransformationException;
@@ -51,17 +51,17 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     private static final long serialVersionUID = 1L;
     private final static Logger LOGGER = LoggerFactory.getLogger(ReflectionFormBuilderDemo.class);
     private ReflectionFormPanel reflectionPanel;
-    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
 
     /**
      * Creates new form ReflectionFormBuilderDemo
      */
     public ReflectionFormBuilderDemo() throws TransformationException, NoSuchFieldException {
         this.initComponents();
-        MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(messageHandler);
+        MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
-        classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(messageHandler));
-        classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(messageHandler));
+        classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(), new IntegerListFieldHandler(issueHandler));
+        classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(), new SimpleEntityListFieldHandler(issueHandler));
         classMapping.put(EntityB.class, new FieldHandler<Boolean,FieldUpdateEvent<Boolean>, ReflectionFormBuilder, Component>() {
             @Override
             public JComponent handle(Field field,
@@ -87,7 +87,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                 fieldHandlerFactory.generatePrimitiveMapping());
         ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
                 "Field description",
-                messageHandler,
+                issueHandler,
                 new JPACachedFieldRetriever());
         reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityA.class,
                 null, //entityToUpdate

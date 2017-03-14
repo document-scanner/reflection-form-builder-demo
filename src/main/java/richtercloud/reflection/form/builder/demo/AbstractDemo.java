@@ -29,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.message.handler.ConfirmMessageHandler;
 import richtercloud.message.handler.DialogConfirmMessageHandler;
-import richtercloud.message.handler.LoggerMessageHandler;
-import richtercloud.message.handler.MessageHandler;
+import richtercloud.message.handler.IssueHandler;
+import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.jpa.IdGenerator;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
@@ -50,7 +50,7 @@ import richtercloud.reflection.form.builder.storage.StorageCreationException;
 public abstract class AbstractDemo extends JFrame {
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractDemo.class);
     private final Connection connection;
-    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final ConfirmMessageHandler confirmMessageHandler = new DialogConfirmMessageHandler(this);
     private final IdApplier idApplier = new GeneratedValueIdApplier();
     private final IdGenerator idGenerator = MemorySequentialIdGenerator.getInstance();
@@ -120,8 +120,8 @@ public abstract class AbstractDemo extends JFrame {
         return databaseName;
     }
 
-    public MessageHandler getMessageHandler() {
-        return messageHandler;
+    public IssueHandler getIssueHandler() {
+        return issueHandler;
     }
 
     public IdApplier getIdApplier() {

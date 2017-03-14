@@ -26,8 +26,8 @@ import java.util.Set;
 import javax.swing.ListSelectionModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.LoggerMessageHandler;
-import richtercloud.message.handler.MessageHandler;
+import richtercloud.message.handler.IssueHandler;
+import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.reflection.form.builder.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
@@ -61,7 +61,7 @@ public class QueryPanelDemo extends AbstractDemo {
         QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select b from EntityB b", 5, new Date()));
         QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select c from EntityC c", 3, new Date()));
     }
-    private final MessageHandler messageHandler = new LoggerMessageHandler(LOGGER);
+    private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final Class<?> entityClass = EntityA.class;
     private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
 
@@ -70,7 +70,7 @@ public class QueryPanelDemo extends AbstractDemo {
      */
     public QueryPanelDemo() throws SQLException, IOException, StorageException, StorageCreationException, StorageConfValidationException {
         this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
-                messageHandler,
+                issueHandler,
                 new JPACachedFieldRetriever());
         this.initComponents();
     }
@@ -101,7 +101,7 @@ public class QueryPanelDemo extends AbstractDemo {
         QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
                 getEntityClasses(),
                 false,
-                getMessageHandler());
+                getIssueHandler());
         QueryHistoryEntryStorage entryStorage;
         try {
             entryStorage = entryStorageFactory.create();
@@ -111,7 +111,7 @@ public class QueryPanelDemo extends AbstractDemo {
         try {
             return new QueryPanel<>(getStorage(),
                     entityClass,
-                    messageHandler,
+                    issueHandler,
                     fieldRetriever,
                     null, //initialValue
                     bidirectionalControlPanel,

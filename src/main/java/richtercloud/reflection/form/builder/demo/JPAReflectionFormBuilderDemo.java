@@ -92,7 +92,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         String bidirectionalHelpDialogTitle = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
         jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(getStorage(),
                 20,
-                getMessageHandler(),
+                getIssueHandler(),
                 amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyExchangeRateRetriever,
@@ -101,17 +101,17 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyExchangeRateRetriever,
-                getMessageHandler());
+                getIssueHandler());
         JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(getStorage(),
                 20,
-                getMessageHandler(),
+                getIssueHandler(),
                 bidirectionalHelpDialogTitle,
                 fieldRetriever);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
                 this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
         ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
-                getMessageHandler(),
+                getIssueHandler(),
                 embeddableFieldHandler,
                 fieldRetriever);
         JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
@@ -121,28 +121,28 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
                 getEntityClasses(),
                 false, //forbidSubtypes
-                getMessageHandler());
+                getIssueHandler());
         QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = jPAAmountMoneyClassMappingFactory.generateClassMapping();
         classMapping.put(EntityA.class.getDeclaredField("elementCollectionBasics").getGenericType(),
-                new IntegerListFieldHandler(getMessageHandler()));
+                new IntegerListFieldHandler(getIssueHandler()));
         classMapping.put(EntityA.class.getDeclaredField("oneToManyEntityBs").getGenericType(),
                 new JPAEntityListFieldHandler(getStorage(),
-                        getMessageHandler(),
+                        getIssueHandler(),
                         bidirectionalHelpDialogTitle,
                         fieldInitializer,
                         entryStorage,
                         fieldRetriever));
         classMapping.put(EntityD.class.getDeclaredField("oneToManyEntityCs").getGenericType(),
                 new JPAEntityListFieldHandler(getStorage(),
-                        getMessageHandler(),
+                        getIssueHandler(),
                         bidirectionalHelpDialogTitle,
                         fieldInitializer,
                         entryStorage,
                         fieldRetriever));
         Map<Class<?>, FieldHandler<?,?,?, ?>> primitiveMapping = jPAAmountMoneyClassMappingFactory.generatePrimitiveMapping();
         ToManyTypeHandler toManyTypeHandler = new ToManyTypeHandler(getStorage(),
-                getMessageHandler(),
+                getIssueHandler(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 bidirectionalHelpDialogTitle,
@@ -150,7 +150,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 entryStorage,
                 fieldRetriever);
         ToOneTypeHandler toOneTypeHandler = new ToOneTypeHandler(getStorage(),
-                getMessageHandler(),
+                getIssueHandler(),
                 bidirectionalHelpDialogTitle,
                 fieldInitializer,
                 entryStorage,
@@ -161,12 +161,12 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 elementCollectionTypeHandler,
                 toManyTypeHandler,
                 toOneTypeHandler,
-                getMessageHandler(),
+                getIssueHandler(),
                 fieldRetriever,
                 getIdApplier());
         JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(getStorage(),
                 APP_NAME,
-                getMessageHandler(),
+                getIssueHandler(),
                 getConfirmMessageHandler(),
                 fieldRetriever,
                 getIdApplier(),
