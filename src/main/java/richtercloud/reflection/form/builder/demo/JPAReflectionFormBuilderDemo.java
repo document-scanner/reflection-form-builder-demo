@@ -22,7 +22,6 @@ import java.util.Map;
 import javax.swing.BoxLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.validation.tools.FieldRetriever;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
@@ -55,6 +54,7 @@ import richtercloud.reflection.form.builder.storage.StorageConfValidationExcepti
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
 import richtercloud.validation.tools.FieldRetrievalException;
+import richtercloud.validation.tools.FieldRetriever;
 
 /**
  *

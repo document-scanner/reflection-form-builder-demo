@@ -31,7 +31,6 @@ import richtercloud.message.handler.ConfirmMessageHandler;
 import richtercloud.message.handler.DialogConfirmMessageHandler;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.validation.tools.FieldRetriever;
 import richtercloud.reflection.form.builder.jpa.IdGenerator;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.MemorySequentialIdGenerator;
@@ -42,6 +41,7 @@ import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistence
 import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
+import richtercloud.validation.tools.FieldRetriever;
 
 /**
  *
