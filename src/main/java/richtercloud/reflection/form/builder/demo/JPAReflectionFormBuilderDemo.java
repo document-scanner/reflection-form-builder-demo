@@ -54,6 +54,7 @@ import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMon
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
+import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -75,7 +76,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException {
+    public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException, FieldRetrievalException {
         super();
         initComponents();
         fileCacheDir = File.createTempFile(JPAReflectionFormBuilderDemo.class.getSimpleName(), null);
@@ -281,7 +282,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             public void run() {
                 try {
                     new JPAReflectionFormBuilderDemo().setVisible(true);
-                } catch (StorageException | IOException | TransformationException | QueryHistoryEntryStorageCreationException | NoSuchFieldException | SQLException | StorageConfValidationException | StorageCreationException ex) {
+                } catch (StorageException | IOException | TransformationException | QueryHistoryEntryStorageCreationException | NoSuchFieldException | SQLException | StorageConfValidationException | StorageCreationException | FieldRetrievalException ex) {
                     throw new RuntimeException(ex);
                 }
             }

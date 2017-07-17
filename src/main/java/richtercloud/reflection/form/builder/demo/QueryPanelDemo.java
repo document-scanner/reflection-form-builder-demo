@@ -43,6 +43,7 @@ import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializ
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
+import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -83,7 +84,12 @@ public class QueryPanelDemo extends AbstractDemo {
     private QueryPanel createQueryPanel() {
         String bidirectionalHelpDialogTitle = String.format("%s - Info", QueryPanelDemo.class.getSimpleName());
 
-        List<Field> entityClassFields = fieldRetriever.retrieveRelevantFields(entityClass);
+        List<Field> entityClassFields;
+        try {
+            entityClassFields = fieldRetriever.retrieveRelevantFields(entityClass);
+        } catch (FieldRetrievalException ex) {
+            throw new RuntimeException(ex);
+        }
         Set<Field> mappedFieldCandidates = QueryPanel.retrieveMappedFieldCandidates(entityClass,
                         entityClassFields);
         BidirectionalControlPanel bidirectionalControlPanel = new BidirectionalControlPanel(entityClass,
@@ -118,7 +124,7 @@ public class QueryPanelDemo extends AbstractDemo {
                     ListSelectionModel.SINGLE_SELECTION,
                     fieldInitializer,
                     entryStorage);
-        } catch (IllegalArgumentException | IllegalAccessException ex) {
+        } catch (IllegalArgumentException | IllegalAccessException | FieldRetrievalException ex) {
             throw new RuntimeException(ex);
         }
     }

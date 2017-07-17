@@ -46,6 +46,7 @@ import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializ
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
+import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -93,7 +94,7 @@ public class QueryListPanelDemo extends AbstractDemo {
             public void run() {
                 try {
                     new QueryListPanelDemo().setVisible(true);
-                } catch (IOException | SQLException | StorageException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException ex) {
+                } catch (IOException | SQLException | StorageException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException | FieldRetrievalException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -111,7 +112,7 @@ public class QueryListPanelDemo extends AbstractDemo {
     /**
      * Creates new form ListQueryPanelDemo
      */
-    public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException {
+    public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException, FieldRetrievalException {
         PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
                 getDatabaseName(),
                 getSchemeChecksumFile()),

@@ -42,6 +42,7 @@ import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -56,7 +57,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     /**
      * Creates new form ReflectionFormBuilderDemo
      */
-    public ReflectionFormBuilderDemo() throws TransformationException, NoSuchFieldException {
+    public ReflectionFormBuilderDemo() throws TransformationException, NoSuchFieldException, FieldRetrievalException {
         this.initComponents();
         MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
@@ -205,7 +206,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
             public void run() {
                 try {
                     new ReflectionFormBuilderDemo().setVisible(true);
-                } catch (TransformationException | NoSuchFieldException ex) {
+                } catch (TransformationException | NoSuchFieldException | FieldRetrievalException ex) {
                     throw new RuntimeException(ex);
                 }
             }
