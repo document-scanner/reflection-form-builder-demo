@@ -16,6 +16,7 @@ package richtercloud.reflection.form.builder.demo;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException, FieldRetrievalException {
         super();
         initComponents();
-        fileCacheDir = File.createTempFile(JPAReflectionFormBuilderDemo.class.getSimpleName(), null);
+        fileCacheDir = Files.createTempDirectory(JPAReflectionFormBuilderDemo.class.getSimpleName()).toFile();
         amountMoneyExchangeRateRetriever = new FailsafeAmountMoneyExchangeRateRetriever(fileCacheDir);
 
         EntityA entityA = new EntityA(8484L, 24, "klfds");
