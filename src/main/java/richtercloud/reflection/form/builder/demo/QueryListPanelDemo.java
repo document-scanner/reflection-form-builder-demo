@@ -26,11 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
@@ -38,10 +34,7 @@ import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageC
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
-import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
@@ -100,7 +93,6 @@ public class QueryListPanelDemo extends AbstractDemo {
             }
         });
     }
-    private ReflectionFormBuilder reflectionFormBuilder;
     private Class<?> entityClass = EntityA.class;
     private List<Object> initialValues = new LinkedList<>();
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
@@ -113,20 +105,7 @@ public class QueryListPanelDemo extends AbstractDemo {
      * Creates new form ListQueryPanelDemo
      */
     public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException, FieldRetrievalException {
-        PersistenceStorage storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(getEntityClasses(),
-                getDatabaseName(),
-                getSchemeChecksumFile()),
-                "richtercloud_reflection-form-builder-demo_jar_1.0-SNAPSHOTPU",
-                1, //parallelQueryCount
-                getFieldRetriever()
-        );
-        MappingFieldHandlerFactory mappingFieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
-        FieldHandler fieldHandler = new MappingFieldHandler<>(mappingFieldHandlerFactory.generateClassMapping(),
-                mappingFieldHandlerFactory.generatePrimitiveMapping());
         JPAFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
-        this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
-                issueHandler,
-                fieldRetriever);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
                 null);
@@ -155,7 +134,6 @@ public class QueryListPanelDemo extends AbstractDemo {
 
 
     private void initComponents() {
-
         createAButton = new javax.swing.JButton();
         createCButton = new javax.swing.JButton();
         createBButton = new javax.swing.JButton();
@@ -217,6 +195,7 @@ public class QueryListPanelDemo extends AbstractDemo {
         pack();
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
@@ -224,6 +203,7 @@ public class QueryListPanelDemo extends AbstractDemo {
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
         EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
@@ -231,6 +211,7 @@ public class QueryListPanelDemo extends AbstractDemo {
         LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) throws StorageException {
         Long nextId0 = getNextId();
         List<EntityA> as = getStorage().runQueryAll(EntityA.class);

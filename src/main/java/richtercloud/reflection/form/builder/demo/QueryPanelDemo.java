@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
@@ -55,7 +54,6 @@ public class QueryPanelDemo extends AbstractDemo {
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryPanelDemo.class);
     private static Long nextId = 1L;
     private final static Random RANDOM = new Random();
-    private ReflectionFormBuilder reflectionFormBuilder;
     private final static List<QueryHistoryEntry> QUERY_PANEL_INITIAL_HISTORY = new LinkedList<>();
     static {
         QUERY_PANEL_INITIAL_HISTORY.add(new QueryHistoryEntry("select a from EntityA a", 1, new Date()));
@@ -70,9 +68,6 @@ public class QueryPanelDemo extends AbstractDemo {
      * Creates new form Demo
      */
     public QueryPanelDemo() throws SQLException, IOException, StorageException, StorageCreationException, StorageConfValidationException {
-        this.reflectionFormBuilder = new ReflectionFormBuilder("Field description",
-                issueHandler,
-                new JPACachedFieldRetriever());
         this.initComponents();
     }
 
@@ -201,6 +196,7 @@ public class QueryPanelDemo extends AbstractDemo {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAButtonActionPerformed
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
@@ -212,6 +208,7 @@ public class QueryPanelDemo extends AbstractDemo {
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }//GEN-LAST:event_createAButtonActionPerformed
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBButtonActionPerformed
         Long nextId0 = getNextId();
         List<EntityA> as = getStorage().runQueryAll(EntityA.class);
@@ -228,6 +225,7 @@ public class QueryPanelDemo extends AbstractDemo {
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
     }//GEN-LAST:event_createBButtonActionPerformed
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCButtonActionPerformed
         Long nextId0 = getNextId();
         EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));

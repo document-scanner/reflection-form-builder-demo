@@ -159,6 +159,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
         Object instance = this.reflectionPanel.retrieveInstance();
         displayInstanceInfoDialog(this, instance);

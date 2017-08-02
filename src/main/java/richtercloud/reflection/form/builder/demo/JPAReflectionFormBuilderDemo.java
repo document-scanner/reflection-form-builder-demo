@@ -21,16 +21,12 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.BoxLayout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
 import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.components.money.AmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
 import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
-import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyUsageStatisticsStorage;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
@@ -63,9 +59,7 @@ import richtercloud.validation.tools.FieldRetriever;
  */
 public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final static String APP_NAME = "reflection-form-builder-demo";
-    private final static Logger LOGGER = LoggerFactory.getLogger(JPAReflectionFormBuilderDemo.class);
     private static final long serialVersionUID = 1L;
-    private final AmountMoneyUsageStatisticsStorage amountMoneyUsageStatisticsStorage = new MemoryAmountMoneyUsageStatisticsStorage();
     private final AmountMoneyCurrencyStorage amountMoneyCurrencyStorage = new MemoryAmountMoneyCurrencyStorage();
     private final File fileCacheDir;
     private final AmountMoneyExchangeRateRetriever amountMoneyExchangeRateRetriever;
@@ -95,19 +89,15 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(getStorage(),
                 20,
                 getIssueHandler(),
-                amountMoneyUsageStatisticsStorage,
                 amountMoneyCurrencyStorage,
                 amountMoneyExchangeRateRetriever,
-                bidirectionalHelpDialogTitle,
                 fieldRetriever);
-        this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyUsageStatisticsStorage,
-                amountMoneyCurrencyStorage,
+        this.amountMoneyMappingFieldHandlerFactory = new AmountMoneyMappingFieldHandlerFactory(amountMoneyCurrencyStorage,
                 amountMoneyExchangeRateRetriever,
                 getIssueHandler());
         JPAAmountMoneyMappingTypeHandlerFactory jPAAmountMoneyTypeHandlerMappingFactory = new JPAAmountMoneyMappingTypeHandlerFactory(getStorage(),
                 20,
                 getIssueHandler(),
-                bidirectionalHelpDialogTitle,
                 fieldRetriever);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
                 this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
@@ -164,7 +154,6 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 toManyTypeHandler,
                 toOneTypeHandler,
                 getIssueHandler(),
-                fieldRetriever,
                 getIdApplier());
         JPAReflectionFormBuilder reflectionFormBuilder = new JPAReflectionFormBuilder(getStorage(),
                 APP_NAME,
@@ -172,7 +161,6 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 getConfirmMessageHandler(),
                 fieldRetriever,
                 getIdApplier(),
-                getIdGenerator(),
                 new HashMap<Class<?>, WarningHandler<?>>() //warningHandlers
         );
         reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityD.class,
@@ -249,6 +237,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private void displayButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_displayButtonActionPerformed
         Object instance = this.reflectionPanel.retrieveInstance();
         ReflectionFormBuilderDemo.displayInstanceInfoDialog(this, instance);
