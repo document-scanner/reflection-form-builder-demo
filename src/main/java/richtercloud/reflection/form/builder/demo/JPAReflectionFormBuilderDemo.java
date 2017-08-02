@@ -21,7 +21,11 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.BoxLayout;
+import richtercloud.message.handler.DialogMessageHandler;
+import richtercloud.message.handler.ExceptionMessage;
+import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.ResetException;
 import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
 import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
@@ -50,7 +54,6 @@ import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMon
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.validation.tools.FieldRetrievalException;
 import richtercloud.validation.tools.FieldRetriever;
 
 /**
@@ -71,7 +74,15 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     /**
      * Creates new form JPAReflectionFormBuilderDemo
      */
-    public JPAReflectionFormBuilderDemo() throws StorageException, IOException, TransformationException, QueryHistoryEntryStorageCreationException, NoSuchFieldException, SQLException, StorageConfValidationException, StorageCreationException, FieldRetrievalException {
+    public JPAReflectionFormBuilderDemo() throws StorageException,
+            IOException,
+            TransformationException,
+            QueryHistoryEntryStorageCreationException,
+            NoSuchFieldException,
+            SQLException,
+            StorageConfValidationException,
+            StorageCreationException,
+            ResetException {
         super();
         initComponents();
         fileCacheDir = Files.createTempDirectory(JPAReflectionFormBuilderDemo.class.getSimpleName()).toFile();
@@ -100,7 +111,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 getIssueHandler(),
                 fieldRetriever);
         FieldHandler embeddableFieldHandler = new MappingFieldHandler(this.amountMoneyMappingFieldHandlerFactory.generateClassMapping(), //don't use JPA... field handler factory because it's for embeddables
-                this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping());
+                this.amountMoneyMappingFieldHandlerFactory.generatePrimitiveMapping(),
+                getIssueHandler());
         ElementCollectionTypeHandler elementCollectionTypeHandler = new ElementCollectionTypeHandler(jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 jPAAmountMoneyTypeHandlerMappingFactory.generateTypeHandlerMapping(),
                 getIssueHandler(),
@@ -247,6 +259,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        MessageHandler messageHandler = new DialogMessageHandler(null //parent
+        );
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -260,11 +274,9 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            throw new RuntimeException(ex);
+            messageHandler.handle(new ExceptionMessage(ex));
+            return;
         }
-        //</editor-fold>
-
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -272,8 +284,16 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             public void run() {
                 try {
                     new JPAReflectionFormBuilderDemo().setVisible(true);
-                } catch (StorageException | IOException | TransformationException | QueryHistoryEntryStorageCreationException | NoSuchFieldException | SQLException | StorageConfValidationException | StorageCreationException | FieldRetrievalException ex) {
-                    throw new RuntimeException(ex);
+                } catch (StorageException
+                        | IOException
+                        | TransformationException
+                        | QueryHistoryEntryStorageCreationException
+                        | NoSuchFieldException
+                        | SQLException
+                        | StorageConfValidationException
+                        | StorageCreationException
+                        | ResetException ex) {
+                    messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });

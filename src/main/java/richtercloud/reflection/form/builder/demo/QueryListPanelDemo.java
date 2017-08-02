@@ -21,12 +21,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import javax.swing.GroupLayout;
-import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.DialogMessageHandler;
+import richtercloud.message.handler.ExceptionMessage;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.message.handler.MessageHandler;
+import richtercloud.reflection.form.builder.ResetException;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
@@ -39,7 +41,6 @@ import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializ
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -60,6 +61,8 @@ public class QueryListPanelDemo extends AbstractDemo {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        MessageHandler messageHandler = new DialogMessageHandler(null //parent
+        );
         /* Set the Nimbus look and feel */
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
@@ -71,14 +74,9 @@ public class QueryListPanelDemo extends AbstractDemo {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(QueryListPanelDemo.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+            messageHandler.handle(new ExceptionMessage(ex));
+            return;
         }
 
         /* Create and display the form */
@@ -87,8 +85,16 @@ public class QueryListPanelDemo extends AbstractDemo {
             public void run() {
                 try {
                     new QueryListPanelDemo().setVisible(true);
-                } catch (IOException | SQLException | StorageException | StorageCreationException | StorageConfValidationException | QueryHistoryEntryStorageCreationException | FieldRetrievalException ex) {
-                    throw new RuntimeException(ex);
+                } catch (IOException
+                        | SQLException
+                        | StorageException
+                        | StorageCreationException
+                        | StorageConfValidationException
+                        | QueryHistoryEntryStorageCreationException
+                        | NoSuchFieldException
+                        | ResetException
+                        | IllegalAccessException ex) {
+                    messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
@@ -104,7 +110,16 @@ public class QueryListPanelDemo extends AbstractDemo {
     /**
      * Creates new form ListQueryPanelDemo
      */
-    public QueryListPanelDemo() throws IOException, SQLException, StorageException, StorageCreationException, StorageConfValidationException, QueryHistoryEntryStorageCreationException, FieldRetrievalException {
+    public QueryListPanelDemo() throws IOException,
+            SQLException,
+            StorageException,
+            StorageCreationException,
+            StorageConfValidationException,
+            QueryHistoryEntryStorageCreationException,
+            NoSuchFieldException,
+            ResetException,
+            IllegalArgumentException,
+            IllegalAccessException {
         JPAFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
@@ -114,21 +129,14 @@ public class QueryListPanelDemo extends AbstractDemo {
                 false,
                 getIssueHandler());
         QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
-        try {
-            this.queryListPanel = new QueryListPanel(getStorage(),
-                    fieldRetriever,
-                    entityClass,
-                    issueHandler,
-                    this.initialValues,
-                    BIDIRECTIONAL_HELP_DIALOG_TITLE,
-                    fieldInitializer,
-                    entryStorage);
-        } catch (IllegalArgumentException | IllegalAccessException ex) {
-            JOptionPane.showMessageDialog(this, //parent
-                    String.format("The following unexpected exception occured during intialization of the query panel: %s", ReflectionFormPanel.generateExceptionMessage(ex)),
-                    null, WIDTH);
-            throw new RuntimeException(ex);
-        }
+        this.queryListPanel = new QueryListPanel(getStorage(),
+                fieldRetriever,
+                entityClass,
+                issueHandler,
+                this.initialValues,
+                BIDIRECTIONAL_HELP_DIALOG_TITLE,
+                fieldInitializer,
+                entryStorage);
         this.initComponents();
     }
 
@@ -148,7 +156,7 @@ public class QueryListPanelDemo extends AbstractDemo {
                 try {
                     createAButtonActionPerformed(evt);
                 } catch (StorageException ex) {
-                    throw new RuntimeException(ex);
+                    issueHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
@@ -160,7 +168,7 @@ public class QueryListPanelDemo extends AbstractDemo {
                 try {
                     createCButtonActionPerformed(evt);
                 } catch (StorageException ex) {
-                    throw new RuntimeException(ex);
+                    issueHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
@@ -172,7 +180,7 @@ public class QueryListPanelDemo extends AbstractDemo {
                 try {
                     createBButtonActionPerformed(evt);
                 } catch (StorageException ex) {
-                    throw new RuntimeException(ex);
+                    issueHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });

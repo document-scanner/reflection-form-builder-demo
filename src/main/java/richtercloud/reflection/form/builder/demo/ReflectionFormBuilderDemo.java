@@ -29,10 +29,14 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.DialogMessageHandler;
+import richtercloud.message.handler.ExceptionMessage;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
+import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ReflectionFormBuilder;
 import richtercloud.reflection.form.builder.ReflectionFormPanel;
+import richtercloud.reflection.form.builder.ResetException;
 import richtercloud.reflection.form.builder.TransformationException;
 import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
@@ -42,7 +46,6 @@ import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
-import richtercloud.validation.tools.FieldRetrievalException;
 
 /**
  *
@@ -57,7 +60,9 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     /**
      * Creates new form ReflectionFormBuilderDemo
      */
-    public ReflectionFormBuilderDemo() throws TransformationException, NoSuchFieldException, FieldRetrievalException {
+    public ReflectionFormBuilderDemo() throws TransformationException,
+            NoSuchFieldException,
+            ResetException {
         this.initComponents();
         MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
@@ -85,7 +90,8 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
             }
         });
         FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
-                fieldHandlerFactory.generatePrimitiveMapping());
+                fieldHandlerFactory.generatePrimitiveMapping(),
+                issueHandler);
         ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
                 "Field description",
                 issueHandler,
@@ -182,6 +188,8 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        MessageHandler messageHandler = new DialogMessageHandler(null //parent
+        );
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -195,11 +203,9 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            throw new RuntimeException(ex);
+            messageHandler.handle(new ExceptionMessage(ex));
+            return;
         }
-        //</editor-fold>
-
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -207,8 +213,10 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
             public void run() {
                 try {
                     new ReflectionFormBuilderDemo().setVisible(true);
-                } catch (TransformationException | NoSuchFieldException | FieldRetrievalException ex) {
-                    throw new RuntimeException(ex);
+                } catch (TransformationException
+                        | NoSuchFieldException
+                        | ResetException ex) {
+                    messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });

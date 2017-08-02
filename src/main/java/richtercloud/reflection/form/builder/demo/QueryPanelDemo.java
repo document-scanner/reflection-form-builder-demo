@@ -26,8 +26,12 @@ import java.util.Set;
 import javax.swing.ListSelectionModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import richtercloud.message.handler.DialogMessageHandler;
+import richtercloud.message.handler.ExceptionMessage;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
+import richtercloud.message.handler.MessageHandler;
+import richtercloud.reflection.form.builder.ResetException;
 import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
@@ -41,7 +45,6 @@ import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializ
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.validation.tools.FieldRetrievalException;
 import richtercloud.validation.tools.FieldRetriever;
 
 /**
@@ -67,7 +70,16 @@ public class QueryPanelDemo extends AbstractDemo {
     /**
      * Creates new form Demo
      */
-    public QueryPanelDemo() throws SQLException, IOException, StorageException, StorageCreationException, StorageConfValidationException {
+    public QueryPanelDemo() throws SQLException,
+            IOException,
+            StorageException,
+            StorageCreationException,
+            StorageConfValidationException,
+            NoSuchFieldException,
+            IllegalArgumentException,
+            QueryHistoryEntryStorageCreationException,
+            IllegalAccessException,
+            ResetException {
         this.initComponents();
     }
 
@@ -76,15 +88,16 @@ public class QueryPanelDemo extends AbstractDemo {
         return nextId;
     }
 
-    private QueryPanel createQueryPanel() {
+    private QueryPanel createQueryPanel() throws NoSuchFieldException,
+            IllegalArgumentException,
+            QueryHistoryEntryStorageCreationException,
+            IllegalAccessException,
+            ResetException,
+            IOException {
         String bidirectionalHelpDialogTitle = String.format("%s - Info", QueryPanelDemo.class.getSimpleName());
 
         List<Field> entityClassFields;
-        try {
-            entityClassFields = fieldRetriever.retrieveRelevantFields(entityClass);
-        } catch (FieldRetrievalException ex) {
-            throw new RuntimeException(ex);
-        }
+        entityClassFields = fieldRetriever.retrieveRelevantFields(entityClass);
         Set<Field> mappedFieldCandidates = QueryPanel.retrieveMappedFieldCandidates(entityClass,
                         entityClassFields);
         BidirectionalControlPanel bidirectionalControlPanel = new BidirectionalControlPanel(entityClass,
@@ -93,35 +106,22 @@ public class QueryPanelDemo extends AbstractDemo {
                 mappedFieldCandidates);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile;
-        try {
-            entryStorageFile = File.createTempFile(QueryPanelDemo.class.getSimpleName(),
-                    null);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+        entryStorageFile = File.createTempFile(QueryPanelDemo.class.getSimpleName(),
+                null);
         QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
                 getEntityClasses(),
                 false,
                 getIssueHandler());
-        QueryHistoryEntryStorage entryStorage;
-        try {
-            entryStorage = entryStorageFactory.create();
-        } catch (QueryHistoryEntryStorageCreationException ex) {
-            throw new RuntimeException(ex);
-        }
-        try {
-            return new QueryPanel<>(getStorage(),
-                    entityClass,
-                    issueHandler,
-                    fieldRetriever,
-                    null, //initialValue
-                    bidirectionalControlPanel,
-                    ListSelectionModel.SINGLE_SELECTION,
-                    fieldInitializer,
-                    entryStorage);
-        } catch (IllegalArgumentException | IllegalAccessException | FieldRetrievalException ex) {
-            throw new RuntimeException(ex);
-        }
+        QueryHistoryEntryStorage entryStorage = entryStorageFactory.create();
+        return new QueryPanel<>(getStorage(),
+                entityClass,
+                issueHandler,
+                fieldRetriever,
+                null, //initialValue
+                bidirectionalControlPanel,
+                ListSelectionModel.SINGLE_SELECTION,
+                fieldInitializer,
+                entryStorage);
     }
 
     @Override
@@ -136,7 +136,12 @@ public class QueryPanelDemo extends AbstractDemo {
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void initComponents() throws NoSuchFieldException,
+            IllegalArgumentException,
+            QueryHistoryEntryStorageCreationException,
+            IllegalAccessException,
+            ResetException,
+            IOException {
 
         createAButton = new javax.swing.JButton();
         createBButton = new javax.swing.JButton();
@@ -203,7 +208,7 @@ public class QueryPanelDemo extends AbstractDemo {
         try {
             getStorage().store(newA);
         } catch (StorageException ex) {
-            throw new RuntimeException(ex);
+            issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
     }//GEN-LAST:event_createAButtonActionPerformed
@@ -220,7 +225,7 @@ public class QueryPanelDemo extends AbstractDemo {
         try {
             getStorage().store(newB);
         } catch (StorageException ex) {
-            throw new RuntimeException(ex);
+            issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
     }//GEN-LAST:event_createBButtonActionPerformed
@@ -232,7 +237,7 @@ public class QueryPanelDemo extends AbstractDemo {
         try {
             getStorage().store(newC);
         } catch (StorageException ex) {
-            throw new RuntimeException(ex);
+            issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
     }//GEN-LAST:event_createCButtonActionPerformed
@@ -241,6 +246,8 @@ public class QueryPanelDemo extends AbstractDemo {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        MessageHandler messageHandler = new DialogMessageHandler(null //parent
+        );
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -254,13 +261,9 @@ public class QueryPanelDemo extends AbstractDemo {
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            throw new RuntimeException(ex);
+            messageHandler.handle(new ExceptionMessage(ex));
+            return;
         }
-        //</editor-fold>
-        //</editor-fold>
-
-        //</editor-fold>
-        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -268,8 +271,17 @@ public class QueryPanelDemo extends AbstractDemo {
             public void run() {
                 try {
                     new QueryPanelDemo().setVisible(true);
-                } catch (SQLException | IOException | StorageException | StorageCreationException | StorageConfValidationException ex) {
-                    throw new RuntimeException(ex);
+                } catch (SQLException
+                        | IOException
+                        | StorageException
+                        | StorageCreationException
+                        | StorageConfValidationException
+                        | NoSuchFieldException
+                        | IllegalArgumentException
+                        | QueryHistoryEntryStorageCreationException
+                        | IllegalAccessException
+                        | ResetException ex) {
+                    messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
