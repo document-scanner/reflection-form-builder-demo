@@ -18,8 +18,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.BoxLayout;
 import richtercloud.message.handler.DialogMessageHandler;
 import richtercloud.message.handler.ExceptionMessage;
@@ -35,8 +38,8 @@ import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
+import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
 import richtercloud.reflection.form.builder.jpa.WarningHandler;
 import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
@@ -45,16 +48,17 @@ import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
 import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
 import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
+import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.validation.tools.FieldRetriever;
 
 /**
  *
@@ -69,7 +73,7 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
     private ReflectionFormPanel reflectionPanel;
-    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+    private final JPAFieldRetriever fieldRetriever;
 
     /**
      * Creates new form JPAReflectionFormBuilderDemo
@@ -82,7 +86,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
             SQLException,
             StorageConfValidationException,
             StorageCreationException,
-            ResetException {
+            ResetException,
+            FieldOrderValidationException {
         super();
         initComponents();
         fileCacheDir = Files.createTempDirectory(JPAReflectionFormBuilderDemo.class.getSimpleName()).toFile();
@@ -97,6 +102,10 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
         getStorage().store(entityC1);
         getStorage().store(entityC2);
         String bidirectionalHelpDialogTitle = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
+        Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(EntityA.class,
+                EntityB.class,
+                EntityC.class));
+        this.fieldRetriever = new JPAOrderedCachedFieldRetriever(entityClasses);
         jPAAmountMoneyClassMappingFactory = JPAAmountMoneyMappingFieldHandlerFactory.create(getStorage(),
                 20,
                 getIssueHandler(),
@@ -118,7 +127,6 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                 getIssueHandler(),
                 embeddableFieldHandler,
                 fieldRetriever);
-        JPACachedFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(JPAReflectionFormBuilderDemo.class.getSimpleName(),
                 null);
@@ -292,7 +300,8 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
                         | SQLException
                         | StorageConfValidationException
                         | StorageCreationException
-                        | ResetException ex) {
+                        | ResetException
+                        | FieldOrderValidationException ex) {
                     messageHandler.handle(new ExceptionMessage(ex));
                 }
             }

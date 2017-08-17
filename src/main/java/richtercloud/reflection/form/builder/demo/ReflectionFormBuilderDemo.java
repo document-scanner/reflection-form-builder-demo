@@ -21,7 +21,10 @@ import java.awt.Frame;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -45,7 +48,8 @@ import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler
 import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
 import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
+import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 
 /**
  *
@@ -62,7 +66,8 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
      */
     public ReflectionFormBuilderDemo() throws TransformationException,
             NoSuchFieldException,
-            ResetException {
+            ResetException,
+            FieldOrderValidationException {
         this.initComponents();
         MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();
@@ -89,13 +94,15 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         });
+        Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(EntityA.class,
+                EntityB.class));
         FieldHandler fieldHandler = new MappingFieldHandler(classMapping,
                 fieldHandlerFactory.generatePrimitiveMapping(),
                 issueHandler);
         ReflectionFormBuilder reflectionFormBuilder = new ReflectionFormBuilder(
                 "Field description",
                 issueHandler,
-                new JPACachedFieldRetriever());
+                new JPAOrderedCachedFieldRetriever(entityClasses));
         reflectionPanel = reflectionFormBuilder.transformEntityClass(EntityA.class,
                 null, //entityToUpdate
                 fieldHandler
@@ -215,7 +222,8 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
                     new ReflectionFormBuilderDemo().setVisible(true);
                 } catch (TransformationException
                         | NoSuchFieldException
-                        | ResetException ex) {
+                        | ResetException
+                        | FieldOrderValidationException ex) {
                     messageHandler.handle(new ExceptionMessage(ex));
                 }
             }

@@ -32,13 +32,14 @@ import richtercloud.message.handler.DialogConfirmMessageHandler;
 import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.reflection.form.builder.jpa.IdGenerator;
-import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.MemorySequentialIdGenerator;
 import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
 import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
+import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
 import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
 import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.validation.tools.FieldRetriever;
@@ -59,9 +60,13 @@ public abstract class AbstractDemo extends JFrame {
     private final PersistenceStorage storage;
     private final Set<Class<?>> entityClasses;
     private final File schemeChecksumFile;
-    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+    private final FieldRetriever fieldRetriever;
 
-    public AbstractDemo() throws SQLException, IOException, StorageConfValidationException, StorageCreationException {
+    public AbstractDemo() throws SQLException,
+            IOException,
+            StorageConfValidationException,
+            StorageCreationException,
+            FieldOrderValidationException {
         this.parentDir = new File("/tmp/reflection-form-builder-demo");
         if(!parentDir.exists()) {
             parentDir.mkdir();
@@ -100,6 +105,7 @@ public abstract class AbstractDemo extends JFrame {
                 EntityB.class,
                 EntityC.class,
                 EntityD.class));
+        this.fieldRetriever = new JPAOrderedCachedFieldRetriever(entityClasses);
         this.schemeChecksumFile = new File(getParentDir(), "scheme-checksum");
         this.storage = new DerbyEmbeddedPersistenceStorage(new DerbyEmbeddedPersistenceStorageConf(entityClasses,
                 getDatabaseName(),

@@ -18,7 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -32,7 +34,6 @@ import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
@@ -40,8 +41,10 @@ import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageC
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
 import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
@@ -65,7 +68,8 @@ public class QueryPanelDemo extends AbstractDemo {
     }
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final Class<?> entityClass = EntityA.class;
-    private final FieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+    private final Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(entityClass));
+    private final FieldRetriever fieldRetriever;
 
     /**
      * Creates new form Demo
@@ -79,7 +83,9 @@ public class QueryPanelDemo extends AbstractDemo {
             IllegalArgumentException,
             QueryHistoryEntryStorageCreationException,
             IllegalAccessException,
-            ResetException {
+            ResetException,
+            FieldOrderValidationException {
+        this.fieldRetriever =  new JPAOrderedCachedFieldRetriever(entityClasses);
         this.initComponents();
     }
 
@@ -280,7 +286,8 @@ public class QueryPanelDemo extends AbstractDemo {
                         | IllegalArgumentException
                         | QueryHistoryEntryStorageCreationException
                         | IllegalAccessException
-                        | ResetException ex) {
+                        | ResetException
+                        | FieldOrderValidationException ex) {
                     messageHandler.handle(new ExceptionMessage(ex));
                 }
             }

@@ -17,9 +17,12 @@ package richtercloud.reflection.form.builder.demo;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import javax.swing.GroupLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +32,16 @@ import richtercloud.message.handler.IssueHandler;
 import richtercloud.message.handler.LoggerIssueHandler;
 import richtercloud.message.handler.MessageHandler;
 import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.jpa.JPACachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
 import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
 import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
 import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
 import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
 import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
 import richtercloud.reflection.form.builder.storage.StorageCreationException;
 import richtercloud.reflection.form.builder.storage.StorageException;
@@ -93,13 +97,15 @@ public class QueryListPanelDemo extends AbstractDemo {
                         | QueryHistoryEntryStorageCreationException
                         | NoSuchFieldException
                         | ResetException
-                        | IllegalAccessException ex) {
+                        | IllegalAccessException
+                        | FieldOrderValidationException ex) {
                     messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
     }
     private Class<?> entityClass = EntityA.class;
+    private Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(entityClass));
     private List<Object> initialValues = new LinkedList<>();
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final QueryListPanel queryListPanel;
@@ -119,8 +125,9 @@ public class QueryListPanelDemo extends AbstractDemo {
             NoSuchFieldException,
             ResetException,
             IllegalArgumentException,
-            IllegalAccessException {
-        JPAFieldRetriever fieldRetriever = new JPACachedFieldRetriever();
+            IllegalAccessException,
+            FieldOrderValidationException {
+        JPAFieldRetriever fieldRetriever = new JPAOrderedCachedFieldRetriever(entityClasses);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
                 null);
