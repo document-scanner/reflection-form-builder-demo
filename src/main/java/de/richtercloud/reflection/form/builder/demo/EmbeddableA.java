@@ -3,52 +3,58 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
-import javax.persistence.Entity;
+import java.io.Serializable;
+import javax.persistence.Embeddable;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  *
  * @author richter
  */
-@Entity
-public class EntityC extends EntityA {
+@Embeddable
+public class EmbeddableA implements Serializable {
     private static final long serialVersionUID = 1L;
-    private String stringBasicC;
+    private String a;
+    private int b;
 
-    protected EntityC() {
+    public EmbeddableA() {
     }
 
-    public EntityC(Long id, int intBasicA, String stringBasicA, String stringBasicC) {
-        super(id, intBasicA, stringBasicA);
-        this.stringBasicC = stringBasicC;
+    public EmbeddableA(String a, int b) {
+        this.a = a;
+        this.b = b;
     }
 
-    /**
-     * @return the basicString
-     */
-    public String getStringBasicC() {
-        return this.stringBasicC;
+    public String getA() {
+        return a;
     }
 
-    /**
-     * @param stringBasicC the basicString to set
-     */
-    public void setStringBasicC(String stringBasicC) {
-        this.stringBasicC = stringBasicC;
+    public void setA(String a) {
+        this.a = a;
+    }
+
+    public int getB() {
+        return b;
+    }
+
+    public void setB(int b) {
+        this.b = b;
     }
 
     @Override
     public String toString() {
-        return this.getReflectionToStringBuilder().toString();
+        return new ReflectionToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE).toString();
     }
 }

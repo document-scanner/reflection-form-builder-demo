@@ -3,17 +3,41 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
+import de.richtercloud.message.handler.DialogMessageHandler;
+import de.richtercloud.message.handler.ExceptionMessage;
+import de.richtercloud.message.handler.IssueHandler;
+import de.richtercloud.message.handler.LoggerIssueHandler;
+import de.richtercloud.message.handler.MessageHandler;
+import de.richtercloud.reflection.form.builder.ResetException;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
+import de.richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
+import de.richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
+import de.richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import de.richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageConfValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageCreationException;
+import de.richtercloud.reflection.form.builder.storage.StorageException;
+import de.richtercloud.validation.tools.FieldRetriever;
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -25,35 +49,21 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import javax.swing.JButton;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.DialogMessageHandler;
-import richtercloud.message.handler.ExceptionMessage;
-import richtercloud.message.handler.IssueHandler;
-import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.message.handler.MessageHandler;
-import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.jpa.panels.BidirectionalControlPanel;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntry;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.panels.QueryPanel;
-import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
-import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
-import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
-import richtercloud.reflection.form.builder.storage.StorageCreationException;
-import richtercloud.reflection.form.builder.storage.StorageException;
-import richtercloud.validation.tools.FieldRetriever;
 
 /**
  *
  * @author richter
  */
+@SuppressWarnings({"PMD.SingularField",
+    "PMD.AccessorMethodGeneration",
+    "PMD.FieldDeclarationsShouldBeAtStartOfClass"
+})
 public class QueryPanelDemo extends AbstractDemo {
     private static final long serialVersionUID = 1L;
     private final static String APP_NAME = "reflection-form-builder-demo";
@@ -68,38 +78,38 @@ public class QueryPanelDemo extends AbstractDemo {
     }
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final Class<?> entityClass = EntityA.class;
-    private final Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(entityClass));
-    private final FieldRetriever fieldRetriever;
+    private final Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(EntityA.class,
+            EntityB.class,
+            EntityC.class));
+    private final FieldRetriever fieldRetriever = new JPAOrderedCachedFieldRetriever(entityClasses);
+    private final JButton createAButton = new JButton();
+    private final JButton createBButton = new JButton();
+    private final JButton createCButton = new JButton();
+    private final QueryPanel<EntityA> queryPanel;
 
-    /**
-     * Creates new form Demo
-     */
-    public QueryPanelDemo() throws SQLException,
-            IOException,
-            StorageException,
-            StorageCreationException,
-            StorageConfValidationException,
-            NoSuchFieldException,
-            IllegalArgumentException,
-            QueryHistoryEntryStorageCreationException,
-            IllegalAccessException,
-            ResetException,
-            FieldOrderValidationException {
-        this.fieldRetriever =  new JPAOrderedCachedFieldRetriever(entityClasses);
-        this.initComponents();
-    }
-
-    private static synchronized Long getNextId() {
+    private static Long getNextId() {
         nextId += 1;
         return nextId;
     }
 
-    private QueryPanel createQueryPanel() throws NoSuchFieldException,
+    public QueryPanelDemo() throws IOException,
             IllegalArgumentException,
+            FieldHandlingException,
+            FieldOrderValidationException,
             QueryHistoryEntryStorageCreationException,
-            IllegalAccessException,
             ResetException,
-            IOException {
+            SQLException,
+            StorageConfValidationException,
+            StorageCreationException {
+        super();
+        this.queryPanel = createQueryPanel();
+        this.initComponents();
+    }
+
+    private QueryPanel createQueryPanel() throws FieldHandlingException,
+            IOException,
+            QueryHistoryEntryStorageCreationException,
+            ResetException {
         String bidirectionalHelpDialogTitle = String.format("%s - Info", QueryPanelDemo.class.getSimpleName());
 
         List<Field> entityClassFields;
@@ -111,8 +121,7 @@ public class QueryPanelDemo extends AbstractDemo {
                 QueryPanel.retrieveMappedByFieldPanel(entityClassFields),
                 mappedFieldCandidates);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
-        File entryStorageFile;
-        entryStorageFile = File.createTempFile(QueryPanelDemo.class.getSimpleName(),
+        File entryStorageFile = File.createTempFile(QueryPanelDemo.class.getSimpleName(),
                 null);
         QueryHistoryEntryStorageFactory entryStorageFactory = new XMLFileQueryHistoryEntryStorageFactory(entryStorageFile,
                 getEntityClasses(),
@@ -135,47 +144,24 @@ public class QueryPanelDemo extends AbstractDemo {
         return APP_NAME;
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() throws NoSuchFieldException,
-            IllegalArgumentException,
-            QueryHistoryEntryStorageCreationException,
-            IllegalAccessException,
-            ResetException,
-            IOException {
-
-        createAButton = new javax.swing.JButton();
-        createBButton = new javax.swing.JButton();
-        createCButton = new javax.swing.JButton();
-        queryPanel = createQueryPanel();
-
+    private void initComponents() {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBounds(new java.awt.Rectangle(0, 0, 0, 0));
 
         createAButton.setText("Create new A (references B)");
-        createAButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createAButtonActionPerformed(evt);
-            }
+        createAButton.addActionListener((ActionEvent evt) -> {
+            createAButtonActionPerformed(evt);
         });
 
         createBButton.setText("Create new B");
-        createBButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createBButtonActionPerformed(evt);
-            }
+        createBButton.addActionListener((ActionEvent evt) -> {
+            createBButtonActionPerformed(evt);
         });
 
         createCButton.setText("Create new C (extends A)");
-        createCButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createCButtonActionPerformed(evt);
-            }
+        createCButton.addActionListener((ActionEvent evt) -> {
+            createCButtonActionPerformed(evt);
         });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -205,10 +191,10 @@ public class QueryPanelDemo extends AbstractDemo {
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
-    private void createAButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createAButtonActionPerformed
+    private void createAButtonActionPerformed(ActionEvent evt) {
         Long nextId0 = getNextId();
         EntityA newA = new EntityA(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()));
         try {
@@ -217,10 +203,10 @@ public class QueryPanelDemo extends AbstractDemo {
             issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityA.class.getName());
-    }//GEN-LAST:event_createAButtonActionPerformed
+    }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
-    private void createBButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createBButtonActionPerformed
+    private void createBButtonActionPerformed(ActionEvent evt) {
         Long nextId0 = getNextId();
         List<EntityA> as = getStorage().runQueryAll(EntityA.class);
         EntityA randomA = null;
@@ -234,10 +220,10 @@ public class QueryPanelDemo extends AbstractDemo {
             issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityB.class.getName());
-    }//GEN-LAST:event_createBButtonActionPerformed
+    }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
-    private void createCButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createCButtonActionPerformed
+    private void createCButtonActionPerformed(ActionEvent evt) {
         Long nextId0 = getNextId();
         EntityC newC = new EntityC(nextId0, RANDOM.nextInt(), String.valueOf(RANDOM.nextInt()), String.valueOf(RANDOM.nextInt()));
         try {
@@ -246,7 +232,7 @@ public class QueryPanelDemo extends AbstractDemo {
             issueHandler.handle(new ExceptionMessage(ex));
         }
         LOGGER.info("Create and persisted new instance of {}", EntityC.class.getName());
-    }//GEN-LAST:event_createCButtonActionPerformed
+    }
 
     /**
      * @param args the command line arguments
@@ -254,50 +240,36 @@ public class QueryPanelDemo extends AbstractDemo {
     public static void main(String args[]) {
         MessageHandler messageHandler = new DialogMessageHandler(null //parent
         );
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
         try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException
+                | InstantiationException
+                | IllegalAccessException
+                | UnsupportedLookAndFeelException ex) {
             messageHandler.handle(new ExceptionMessage(ex));
             return;
         }
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    new QueryPanelDemo().setVisible(true);
-                } catch (SQLException
-                        | IOException
-                        | StorageException
-                        | StorageCreationException
-                        | StorageConfValidationException
-                        | NoSuchFieldException
-                        | IllegalArgumentException
-                        | QueryHistoryEntryStorageCreationException
-                        | IllegalAccessException
-                        | ResetException
-                        | FieldOrderValidationException ex) {
-                    messageHandler.handle(new ExceptionMessage(ex));
-                }
+        EventQueue.invokeLater(() -> {
+            try {
+                new QueryPanelDemo().setVisible(true);
+            } catch (SQLException
+                    | IOException
+                    | IllegalArgumentException
+                    | QueryHistoryEntryStorageCreationException
+                    | ResetException
+                    | FieldOrderValidationException
+                    | FieldHandlingException
+                    | StorageConfValidationException
+                    | StorageCreationException ex) {
+                messageHandler.handle(new ExceptionMessage(ex));
             }
         });
     }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton createAButton;
-    private javax.swing.JButton createBButton;
-    private javax.swing.JButton createCButton;
-    private richtercloud.reflection.form.builder.jpa.panels.QueryPanel<EntityA> queryPanel;
-    // End of variables declaration//GEN-END:variables
 }

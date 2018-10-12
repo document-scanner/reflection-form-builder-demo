@@ -3,17 +3,33 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
+import de.richtercloud.message.handler.ConfirmMessageHandler;
+import de.richtercloud.message.handler.DialogConfirmMessageHandler;
+import de.richtercloud.message.handler.IssueHandler;
+import de.richtercloud.message.handler.LoggerIssueHandler;
+import de.richtercloud.reflection.form.builder.jpa.IdGenerator;
+import de.richtercloud.reflection.form.builder.jpa.MemorySequentialIdGenerator;
+import de.richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
+import de.richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
+import de.richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
+import de.richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
+import de.richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
+import de.richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageConfValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageCreationException;
+import de.richtercloud.validation.tools.FieldRetriever;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -27,22 +43,6 @@ import javax.swing.JOptionPane;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.ConfirmMessageHandler;
-import richtercloud.message.handler.DialogConfirmMessageHandler;
-import richtercloud.message.handler.IssueHandler;
-import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.reflection.form.builder.jpa.IdGenerator;
-import richtercloud.reflection.form.builder.jpa.MemorySequentialIdGenerator;
-import richtercloud.reflection.form.builder.jpa.idapplier.GeneratedValueIdApplier;
-import richtercloud.reflection.form.builder.jpa.idapplier.IdApplier;
-import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorage;
-import richtercloud.reflection.form.builder.jpa.storage.DerbyEmbeddedPersistenceStorageConf;
-import richtercloud.reflection.form.builder.jpa.storage.PersistenceStorage;
-import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
-import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
-import richtercloud.reflection.form.builder.storage.StorageCreationException;
-import richtercloud.validation.tools.FieldRetriever;
 
 /**
  *
@@ -62,11 +62,13 @@ public abstract class AbstractDemo extends JFrame {
     private final File schemeChecksumFile;
     private final FieldRetriever fieldRetriever;
 
+    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     public AbstractDemo() throws SQLException,
             IOException,
             StorageConfValidationException,
             StorageCreationException,
             FieldOrderValidationException {
+        super();
         this.parentDir = new File("/tmp/reflection-form-builder-demo");
         if(!parentDir.exists()) {
             parentDir.mkdir();
@@ -90,7 +92,7 @@ public abstract class AbstractDemo extends JFrame {
                     }
                 }
             },
-            String.format("%s shutdown hook", getClass().getSimpleName())
+                    String.format("%s shutdown hook", getClass().getSimpleName())
             ));
         } catch (InstantiationException | IllegalAccessException ex) {
             JOptionPane.showMessageDialog(null, //parentComponent
@@ -114,6 +116,7 @@ public abstract class AbstractDemo extends JFrame {
                 1, //parallelQuerycount
                 fieldRetriever
         );
+        this.storage.start();
     }
 
     protected abstract String getAppName();

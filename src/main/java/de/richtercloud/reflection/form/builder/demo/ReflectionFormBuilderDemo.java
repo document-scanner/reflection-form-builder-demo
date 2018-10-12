@@ -3,17 +3,35 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
+import de.richtercloud.message.handler.DialogMessageHandler;
+import de.richtercloud.message.handler.ExceptionMessage;
+import de.richtercloud.message.handler.IssueHandler;
+import de.richtercloud.message.handler.LoggerIssueHandler;
+import de.richtercloud.message.handler.MessageHandler;
+import de.richtercloud.reflection.form.builder.ReflectionFormBuilder;
+import de.richtercloud.reflection.form.builder.ReflectionFormPanel;
+import de.richtercloud.reflection.form.builder.ResetException;
+import de.richtercloud.reflection.form.builder.TransformationException;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldUpdateListener;
+import de.richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
+import de.richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import de.richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -32,42 +50,26 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.DialogMessageHandler;
-import richtercloud.message.handler.ExceptionMessage;
-import richtercloud.message.handler.IssueHandler;
-import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.message.handler.MessageHandler;
-import richtercloud.reflection.form.builder.ReflectionFormBuilder;
-import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.TransformationException;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateEvent;
-import richtercloud.reflection.form.builder.fieldhandler.FieldUpdateListener;
-import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.SimpleEntityListFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.factory.MappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
-import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
 
 /**
  *
  * @author richter
  */
+@SuppressWarnings({"PMD.SingularField",
+    "PMD.AccessorMethodGeneration",
+    "PMD.FieldDeclarationsShouldBeAtStartOfClass"
+})
 public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
     private static final long serialVersionUID = 1L;
     private final static Logger LOGGER = LoggerFactory.getLogger(ReflectionFormBuilderDemo.class);
-    private ReflectionFormPanel reflectionPanel;
+    private final ReflectionFormPanel reflectionPanel;
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
 
-    /**
-     * Creates new form ReflectionFormBuilderDemo
-     */
     public ReflectionFormBuilderDemo() throws TransformationException,
             NoSuchFieldException,
             ResetException,
             FieldOrderValidationException {
+        super();
         this.initComponents();
         MappingFieldHandlerFactory fieldHandlerFactory = new MappingFieldHandlerFactory(issueHandler);
         Map<java.lang.reflect.Type, FieldHandler<?,?,?, ?>> classMapping = fieldHandlerFactory.generateClassMapping();

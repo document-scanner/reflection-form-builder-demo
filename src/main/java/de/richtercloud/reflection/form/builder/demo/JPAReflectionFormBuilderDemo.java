@@ -3,17 +3,52 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
+import de.richtercloud.message.handler.DialogMessageHandler;
+import de.richtercloud.message.handler.ExceptionMessage;
+import de.richtercloud.message.handler.MessageHandler;
+import de.richtercloud.reflection.form.builder.ReflectionFormPanel;
+import de.richtercloud.reflection.form.builder.ResetException;
+import de.richtercloud.reflection.form.builder.TransformationException;
+import de.richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
+import de.richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
+import de.richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
+import de.richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
+import de.richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
+import de.richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
+import de.richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
+import de.richtercloud.reflection.form.builder.jpa.WarningHandler;
+import de.richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
+import de.richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
+import de.richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import de.richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
+import de.richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
+import de.richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
+import de.richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
+import de.richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageConfValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageCreationException;
+import de.richtercloud.reflection.form.builder.storage.StorageException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,46 +59,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.BoxLayout;
-import richtercloud.message.handler.DialogMessageHandler;
-import richtercloud.message.handler.ExceptionMessage;
-import richtercloud.message.handler.MessageHandler;
-import richtercloud.reflection.form.builder.ReflectionFormPanel;
-import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.TransformationException;
-import richtercloud.reflection.form.builder.components.money.AmountMoneyCurrencyStorage;
-import richtercloud.reflection.form.builder.components.money.AmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.components.money.FailsafeAmountMoneyExchangeRateRetriever;
-import richtercloud.reflection.form.builder.components.money.MemoryAmountMoneyCurrencyStorage;
-import richtercloud.reflection.form.builder.fieldhandler.FieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.IntegerListFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.MappingFieldHandler;
-import richtercloud.reflection.form.builder.fieldhandler.factory.AmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.JPAEntityListFieldHandler;
-import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.JPAReflectionFormBuilder;
-import richtercloud.reflection.form.builder.jpa.WarningHandler;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.JPAMappingFieldHandler;
-import richtercloud.reflection.form.builder.jpa.fieldhandler.factory.JPAAmountMoneyMappingFieldHandlerFactory;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
-import richtercloud.reflection.form.builder.jpa.typehandler.ElementCollectionTypeHandler;
-import richtercloud.reflection.form.builder.jpa.typehandler.ToManyTypeHandler;
-import richtercloud.reflection.form.builder.jpa.typehandler.ToOneTypeHandler;
-import richtercloud.reflection.form.builder.jpa.typehandler.factory.JPAAmountMoneyMappingTypeHandlerFactory;
-import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
-import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
-import richtercloud.reflection.form.builder.storage.StorageCreationException;
-import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
  *
  * @author richter
  */
+@SuppressWarnings({"PMD.SingularField",
+    "PMD.AccessorMethodGeneration",
+    "PMD.FieldDeclarationsShouldBeAtStartOfClass"
+})
 public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final static String APP_NAME = "reflection-form-builder-demo";
     private static final long serialVersionUID = 1L;
@@ -72,12 +76,9 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
     private final AmountMoneyExchangeRateRetriever amountMoneyExchangeRateRetriever;
     private final JPAAmountMoneyMappingFieldHandlerFactory jPAAmountMoneyClassMappingFactory;
     private final AmountMoneyMappingFieldHandlerFactory amountMoneyMappingFieldHandlerFactory;
-    private ReflectionFormPanel reflectionPanel;
+    private final ReflectionFormPanel reflectionPanel;
     private final JPAFieldRetriever fieldRetriever;
 
-    /**
-     * Creates new form JPAReflectionFormBuilderDemo
-     */
     public JPAReflectionFormBuilderDemo() throws StorageException,
             IOException,
             TransformationException,
@@ -203,7 +204,9 @@ public class JPAReflectionFormBuilderDemo extends AbstractDemo {
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked",
+        "PMD.MissingOverride"
+    })
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 

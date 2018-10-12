@@ -3,17 +3,37 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
-
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
-
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package richtercloud.reflection.form.builder.demo;
+package de.richtercloud.reflection.form.builder.demo;
 
+import de.richtercloud.message.handler.DialogMessageHandler;
+import de.richtercloud.message.handler.ExceptionMessage;
+import de.richtercloud.message.handler.IssueHandler;
+import de.richtercloud.message.handler.LoggerIssueHandler;
+import de.richtercloud.message.handler.MessageHandler;
+import de.richtercloud.reflection.form.builder.ResetException;
+import de.richtercloud.reflection.form.builder.fieldhandler.FieldHandlingException;
+import de.richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
+import de.richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
+import de.richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
+import de.richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
+import de.richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
+import de.richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageConfValidationException;
+import de.richtercloud.reflection.form.builder.storage.StorageCreationException;
+import de.richtercloud.reflection.form.builder.storage.StorageException;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -26,30 +46,15 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import richtercloud.message.handler.DialogMessageHandler;
-import richtercloud.message.handler.ExceptionMessage;
-import richtercloud.message.handler.IssueHandler;
-import richtercloud.message.handler.LoggerIssueHandler;
-import richtercloud.message.handler.MessageHandler;
-import richtercloud.reflection.form.builder.ResetException;
-import richtercloud.reflection.form.builder.jpa.JPAFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorage;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageCreationException;
-import richtercloud.reflection.form.builder.jpa.panels.QueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.panels.QueryListPanel;
-import richtercloud.reflection.form.builder.jpa.panels.XMLFileQueryHistoryEntryStorageFactory;
-import richtercloud.reflection.form.builder.jpa.retriever.JPAOrderedCachedFieldRetriever;
-import richtercloud.reflection.form.builder.jpa.storage.FieldInitializer;
-import richtercloud.reflection.form.builder.jpa.storage.ReflectionFieldInitializer;
-import richtercloud.reflection.form.builder.retriever.FieldOrderValidationException;
-import richtercloud.reflection.form.builder.storage.StorageConfValidationException;
-import richtercloud.reflection.form.builder.storage.StorageCreationException;
-import richtercloud.reflection.form.builder.storage.StorageException;
 
 /**
  *
  * @author richter
  */
+@SuppressWarnings({"PMD.SingularField",
+    "PMD.AccessorMethodGeneration",
+    "PMD.FieldDeclarationsShouldBeAtStartOfClass"
+})
 public class QueryListPanelDemo extends AbstractDemo {
     private static final long serialVersionUID = 1L;
     private final static Logger LOGGER = LoggerFactory.getLogger(QueryListPanelDemo.class);
@@ -57,7 +62,8 @@ public class QueryListPanelDemo extends AbstractDemo {
     private final static String APP_NAME = "Query list panel demo";
     private static Long nextId = 1L;
     private final static String BIDIRECTIONAL_HELP_DIALOG_TITLE = String.format("%s - Info", JPAReflectionFormBuilderDemo.class.getSimpleName());
-    private static synchronized Long getNextId() {
+
+    private static Long getNextId() {
         nextId += 1;
         return nextId;
     }
@@ -98,24 +104,22 @@ public class QueryListPanelDemo extends AbstractDemo {
                         | NoSuchFieldException
                         | ResetException
                         | IllegalAccessException
-                        | FieldOrderValidationException ex) {
+                        | FieldOrderValidationException
+                        | FieldHandlingException ex) {
                     messageHandler.handle(new ExceptionMessage(ex));
                 }
             }
         });
     }
-    private Class<?> entityClass = EntityA.class;
-    private Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(entityClass));
-    private List<Object> initialValues = new LinkedList<>();
+    private final Class<?> entityClass = EntityA.class;
+    private final Set<Class<?>> entityClasses = new HashSet<>(Arrays.asList(entityClass));
+    private final List<Object> initialValues = new LinkedList<>();
     private final IssueHandler issueHandler = new LoggerIssueHandler(LOGGER);
     private final QueryListPanel queryListPanel;
     private javax.swing.JButton createAButton;
     private javax.swing.JButton createBButton;
     private javax.swing.JButton createCButton;
 
-    /**
-     * Creates new form ListQueryPanelDemo
-     */
     public QueryListPanelDemo() throws IOException,
             SQLException,
             StorageException,
@@ -126,7 +130,9 @@ public class QueryListPanelDemo extends AbstractDemo {
             ResetException,
             IllegalArgumentException,
             IllegalAccessException,
-            FieldOrderValidationException {
+            FieldOrderValidationException,
+            FieldHandlingException {
+        super();
         JPAFieldRetriever fieldRetriever = new JPAOrderedCachedFieldRetriever(entityClasses);
         FieldInitializer fieldInitializer = new ReflectionFieldInitializer(fieldRetriever);
         File entryStorageFile = File.createTempFile(QueryListPanelDemo.class.getSimpleName(),
