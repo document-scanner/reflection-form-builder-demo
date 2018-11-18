@@ -143,6 +143,7 @@ public class ReflectionFormBuilderDemo extends javax.swing.JFrame {
 
         displayButton.setText("Display instance info");
         displayButton.addActionListener(new java.awt.event.ActionListener() {
+            @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 displayButtonActionPerformed(evt);
             }
